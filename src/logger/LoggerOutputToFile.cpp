@@ -118,6 +118,12 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
     }
     file_name_map_[cur_log_id_] = file_path;
 
+    static uint32_t kMaxLoggerIdLimit = 100000000;
+    if (kMaxLoggerIdLimit < cur_log_id_)
+    {
+        RenameAllFilesLoggerId();
+    }
+    
     FileHandlerNode* node = new FileHandlerNode(file_handler);
     node->logger_id = cur_log_id_;
     node->file_date_time = file_date_time;
@@ -160,6 +166,41 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
     }
     CheckAndDeleteFileNameMap();
     return true;
+}
+
+void LoggerOutputToFile::RenameAllFilesLoggerId()
+{
+    std::map<uint32_t, std::string> new_file_name_map;
+    uint32_t start_id = 0;
+    auto it = file_name_map_.begin();
+    while (it != file_name_map_.end())
+    {
+        size_t pos1 = it->second.rfind('.');
+        size_t pos2 = it->second.rfind('_');
+        if (pos1 == std::string::npos || pos2 == std::string::npos)
+        {
+            ++it;
+            continue;
+        }
+        std::string file_name = it->second.substr(0, pos2) + "_" + std::to_string(start_id) + it->second.substr(pos1);
+
+        new_file_name_map[start_id] = file_name;
+        rename(it->second.c_str(), file_name.c_str());
+        if (file_handler_list_)
+        {
+            auto node = file_handler_list_->IsExistLoggerId(it->first);
+            if (node)
+            {
+                node->file_path = file_name;
+                node->logger_id = start_id;
+            }
+        }
+
+        cur_log_id_ = start_id;
+        ++start_id;
+        ++it;
+    } 
+    file_name_map_.swap(new_file_name_map);
 }
 
 void LoggerOutputToFile::CheckAndDeleteFileNameMap()

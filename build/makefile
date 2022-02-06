@@ -44,7 +44,7 @@ define Tolib
 	cp -rf ../src/logger/LoggerOutput.h ../include/
 endef 
 
-all:$(TARGET) to_lib test_case	
+all:$(TARGET) to_lib clean_test test_case	
 
 $(TARGET):$(OBJS)
 	$(CC) $(CPPFLAGS) $(OBJ) -o $(TARGET) -W $(LIB_DYNAMIC_FLAG) $(LIB_STATIC_FLAG)
@@ -62,6 +62,11 @@ clean:
 	rm -f *.o
 	rm -f *.a
 	rm -f $(TARGET)
+	rm -rf ../bin/*
+	rm -f ../src/test_case/build/*.o
+	rm -f ../src/test_case/build/agile_logger_test
+
+clean_test:
 	rm -rf ../bin/*
 	rm -f ../src/test_case/build/*.o
 	rm -f ../src/test_case/build/agile_logger_test

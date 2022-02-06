@@ -88,6 +88,11 @@ private:
     std::string Rename(uint32_t logger_id, const std::string& logging_file);
 
     /**
+    *@brief 重命名所有日志logger_id
+    */
+    void RenameAllFilesLoggerId();
+
+    /**
     *@brief 获取日志文件名
     *@return string 日志文件名
     */
