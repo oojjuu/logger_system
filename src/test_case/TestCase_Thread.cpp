@@ -1,6 +1,8 @@
 
 #include "TestCase_Thread.h"
 
+#include <atomic>
+
 using namespace agile::logger;
 
 std::atomic<int> write_file_line_num;

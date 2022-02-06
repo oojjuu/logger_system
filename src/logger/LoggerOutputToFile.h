@@ -145,7 +145,7 @@ private:
     // logger config data
     const LoggerConfig* config_ = nullptr;
     // write counter
-    std::atomic<int> write_counter_;
+    std::atomic<uint32_t> write_counter_;
     // lock
     std::mutex mtx_;
     // file handler list
