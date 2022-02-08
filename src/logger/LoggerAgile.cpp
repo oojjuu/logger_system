@@ -41,11 +41,40 @@ static const std::vector<std::string> kLoggerLevelNames =
     "[SYSTEM] "
 };
 
+static bool kIsEnableLogger = false;
+
+bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag)
+{
+	kIsEnableLogger = LoggerObjectManager::GetInstance().Init(config_file_path, file_name_tag);
+	return kIsEnableLogger;
+}
+
+void DestroyLogger()
+{
+	kIsEnableLogger = false;
+	LoggerObjectManager::GetInstance().Destroy();
+}
+
+const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output)
+{
+	if (!kIsEnableLogger)
+	{
+		return nullptr;
+	}
+	return LoggerObjectManager::GetInstance().SetLoggerOutput(conf_id, std::move(output));
+}
+
 // logger data缓存
 static thread_local std::shared_ptr<LoggerData> kThreadLoggerData = nullptr;
+// logger buffer
+static thread_local std::shared_ptr<LoggerBuffer> kThreadLoggerBuffer = nullptr;
 
 LoggerBuffer& Logger::Get() const
 {
+	if (!kIsEnableLogger)
+	{
+		return *kThreadLoggerBuffer;
+	}
 	return *kThreadLoggerData->logger_buffer;
 }
 
@@ -77,7 +106,7 @@ Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file
 
 Logger::~Logger()
 {
-	if (kThreadLoggerData->logger_buffer->GetEnable())
+	if (kIsEnableLogger && kThreadLoggerData->logger_buffer->GetEnable())
 	{
 		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
@@ -88,6 +117,15 @@ Logger::~Logger()
 bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file, 
 						int line, const std::string& func, LogLevel level)
 {
+	if (!kIsEnableLogger)
+	{
+		if (!kThreadLoggerBuffer)
+		{
+			kThreadLoggerBuffer = std::make_shared<LoggerBuffer>();
+		}
+		kThreadLoggerBuffer->SetEnable(false);
+		return false;
+	}
 	assert(LogLevel::TRACE <= level && level <= LogLevel::SYSTEM);
 
 	const LoggerConfig* config = LoggerConfigManager::GetInstance().GetConfig(conf_id);

@@ -23,6 +23,10 @@ LoggerBuffer::LoggerBuffer(const LoggerConfig* config)
 
 bool LoggerBuffer::Reserve(size_t data_size)
 {
+    if (!enable_)
+    {
+        return false;
+    }
     size_t cur_size = data_size + write_index_;
     if (cur_size <= logger_str_->size())
     {

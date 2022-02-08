@@ -9,21 +9,6 @@
 namespace agile {
 namespace logger {
 
-bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag)
-{
-	return LoggerObjectManager::GetInstance().Init(config_file_path, file_name_tag);
-}
-
-void DestroyLogger()
-{
-	LoggerObjectManager::GetInstance().Destroy();
-}
-
-const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output)
-{
-	return LoggerObjectManager::GetInstance().SetLoggerOutput(conf_id, std::move(output));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 bool LoggerObjectManager::Init(const std::string& config_file_path, const std::string& file_name_tag)
 {
