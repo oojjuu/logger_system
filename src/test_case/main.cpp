@@ -1,6 +1,10 @@
 #include <iostream>
 #include "Test.h"
 
+#include <iostream>
+#include <vector>
+using namespace std;
+
 int main(int argc, char* argv[])
 {   
     std::cout << "args config_path thread_num sleep_micro_seconds tag" << std::endl;
