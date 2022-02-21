@@ -42,7 +42,7 @@ public:
     Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
             int line, const std::string& func, LogLevel level, const char* format, ...);
 
-    virtual ~Logger();
+    ~Logger();
 
     /**
     *@brief 获取logger buffer
