@@ -14,6 +14,7 @@ static const std::string kDefaultTag;
 /**
 *@brief 通过配置文件初始化日志
 *@param config_file_path 配置文件路径
+*@param file_name_tag 文件名标签，可以使用进程号
 *@return bool 是否成功
 */
 extern bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag="");
