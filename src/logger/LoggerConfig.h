@@ -10,8 +10,7 @@ namespace logger {
 /**
 *@brief 日志配置
 */
-struct LoggerConfig
-{
+struct LoggerConfig {
     // 配置id, 默认为0
     uint32_t conf_id;
 

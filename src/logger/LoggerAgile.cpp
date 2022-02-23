@@ -30,8 +30,7 @@ static const std::string kLoggertagSplitChar = "] ";
 static const std::string kLoggerFileLineChar = "\n";
 
 // 日志等级描述字符
-static const std::vector<std::string> kLoggerLevelNames = 
-{
+static const std::vector<std::string> kLoggerLevelNames = {
 	"[TRACE] ",
 	"[DEBUG] ",
 	"[INFO] ",
@@ -43,22 +42,18 @@ static const std::vector<std::string> kLoggerLevelNames =
 
 static bool kIsEnableLogger = false;
 
-bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag)
-{
+bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag) {
 	kIsEnableLogger = LoggerObjectManager::GetInstance().Init(config_file_path, file_name_tag);
 	return kIsEnableLogger;
 }
 
-void DestroyLogger()
-{
+void DestroyLogger() {
 	kIsEnableLogger = false;
 	LoggerObjectManager::GetInstance().Destroy();
 }
 
-const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output)
-{
-	if (!kIsEnableLogger)
-	{
+const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output) {
+	if (!kIsEnableLogger) {
 		return nullptr;
 	}
 	return LoggerObjectManager::GetInstance().SetLoggerOutput(conf_id, std::move(output));
@@ -69,26 +64,21 @@ static thread_local std::shared_ptr<LoggerData> kThreadLoggerData = nullptr;
 // logger buffer
 static thread_local std::shared_ptr<LoggerBuffer> kThreadLoggerBuffer = nullptr;
 
-LoggerBuffer& Logger::Get() const
-{
-	if (!kIsEnableLogger)
-	{
+LoggerBuffer& Logger::Get() const {
+	if (!kIsEnableLogger) {
 		return *kThreadLoggerBuffer;
 	}
 	return *kThreadLoggerData->logger_buffer;
 }
 
 Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-				int line, const std::string& func, LogLevel level)
-{
+				int line, const std::string& func, LogLevel level) {
 	OnLogger(conf_id, tag, file, line, func, level);
 }
 
 Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-				int line, const std::string& func, LogLevel level, const char* format, ...)
-{
-	if (OnLogger(conf_id, tag, file, line, func, level))
-	{
+				int line, const std::string& func, LogLevel level, const char* format, ...) {
+	if (OnLogger(conf_id, tag, file, line, func, level)) {
 		std::shared_ptr<LoggerBuffer>& logger_buffer = kThreadLoggerData->logger_buffer; 
 		size_t logger_buffer_size = logger_buffer->GetConfig()->logger_buffer_size;
 		logger_buffer->Reserve(logger_buffer_size);
@@ -104,10 +94,8 @@ Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file
 	}
 }
 
-Logger::~Logger()
-{
-	if (kIsEnableLogger && kThreadLoggerData->logger_buffer->GetEnable())
-	{
+Logger::~Logger() {
+	if (kIsEnableLogger && kThreadLoggerData->logger_buffer->GetEnable()) {
 		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
 	}
@@ -115,12 +103,9 @@ Logger::~Logger()
 }
 
 bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-						int line, const std::string& func, LogLevel level)
-{
-	if (!kIsEnableLogger)
-	{
-		if (!kThreadLoggerBuffer)
-		{
+						int line, const std::string& func, LogLevel level) {
+	if (!kIsEnableLogger) {
+		if (!kThreadLoggerBuffer) {
 			kThreadLoggerBuffer = std::make_shared<LoggerBuffer>();
 		}
 		kThreadLoggerBuffer->SetEnable(false);
@@ -131,16 +116,15 @@ bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::strin
 	const LoggerConfig* config = LoggerConfigManager::GetInstance().GetConfig(conf_id);
 	bool valid_level = level >= config->level;
 	int cur_tid = LoggerObjectManager::GetInstance().GetLoggerData(conf_id, kThreadLoggerData, valid_level);
-	if (!valid_level)
-	{
+	if (!valid_level) {
 		kThreadLoggerData->logger_buffer->SetEnable(false);
 		return false;
 	}
+
 	kThreadLoggerData->conf_id = conf_id;
 	kThreadLoggerData->tag = tag;
 	kThreadLoggerData->logger_buffer->SetEnable(true);
-	if (!config->logger_with_header)
-	{
+	if (!config->logger_with_header) {
 		return true;
 	}
 	static pid_t cur_pid = getpid();
@@ -159,12 +143,10 @@ bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::strin
 	kThreadLoggerData->tm_time.tm_year, kThreadLoggerData->tm_time.tm_mon, kThreadLoggerData->tm_time.tm_mday,
 	kThreadLoggerData->tm_time.tm_hour, kThreadLoggerData->tm_time.tm_min, kThreadLoggerData->tm_time.tm_sec);
 
-	if (tag.empty())
-	{
+	if (tag.empty()) {
 		index += sprintf(&buffer_str->at(index), " [%d][%d] ", cur_pid, cur_tid);
-	}
-	else
-	{
+	} 
+	else {
 		index += sprintf(&buffer_str->at(index), " [%d][%d] [", cur_pid, cur_tid);
 		
 		memcpy(&buffer_str->at(index), tag.c_str(), tag.length());

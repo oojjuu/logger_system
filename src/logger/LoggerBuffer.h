@@ -18,8 +18,7 @@ namespace logger {
 /**
 *@brief 日志buffer类
 */
-class LoggerBuffer
-{
+class LoggerBuffer {
 public:
     LoggerBuffer() = default;
     LoggerBuffer(const LoggerConfig* config);
@@ -120,8 +119,7 @@ public:
     */
     template<typename T, 
     typename std::enable_if<std::is_pointer<T>::value && !std::is_same<T, const char*>::value, T>::type* = nullptr>
-    LoggerBuffer& operator << (const T& val) 
-    {
+    LoggerBuffer& operator << (const T& val) {
         *this << *val;
         return *this;
     }
@@ -132,8 +130,7 @@ public:
     *@return LoggerBuffer实例
     */
     template<typename T>
-    LoggerBuffer& operator << (const std::shared_ptr<T>& val)
-    {
+    LoggerBuffer& operator << (const std::shared_ptr<T>& val) {
         *this << *val;
         return *this;
     }
@@ -144,8 +141,7 @@ public:
     *@return LoggerBuffer实例
     */
     template<typename T1, typename T2>
-    LoggerBuffer& operator << (const std::pair<T1, T2>& val)
-    {
+    LoggerBuffer& operator << (const std::pair<T1, T2>& val) {
         *this << kBracketLeftString << val.first << kStlMapEmptySplitString << val.second << kBracketRightString;
         return *this;
     }
@@ -157,8 +153,7 @@ public:
     */
     template<typename T, 
     typename std::enable_if<std::is_class<T>::value && !std::is_same<T, std::string>::value, T>::type* = nullptr>
-    LoggerBuffer& operator << (const T& val) 
-    {
+    LoggerBuffer& operator << (const T& val) {
         DoWrite<T>(val, 0);
         return *this;
     }
@@ -168,33 +163,27 @@ private:
     struct WriterFunc;
 
     template<typename T>
-    void DoWrite(const T& val, WriterFunc<T, &T::OnAgileLogger>*)
-    {
-        if (!enable_)
-        {
+    void DoWrite(const T& val, WriterFunc<T, &T::OnAgileLogger>*) {
+        if (!enable_) {
             return;
         }
         val.OnAgileLogger(*this);
     }
 
     template<typename T>
-    void DoWrite(const T& val, ...)
-    {
-        if (!enable_)
-        {
+    void DoWrite(const T& val, ...) {
+        if (!enable_) {
             return;
         }
 
-        if (val.empty())
-        {
+        if (val.empty()) {
             *this << kStlEmptyString;
             return;
         }
         
         auto it = val.begin();
         *this << kBracketLeftString << *it;
-        while (++it != val.end())
-        {
+        while (++it != val.end()) {
             *this << kStlEmptySplitString << *it;
         }
         *this << kBracketRightString;
@@ -205,16 +194,13 @@ private:
     *@param val string
     */
     template<typename T>
-    void WriteWithFmt(T val, const std::string& fmt)
-    {
-        if (!enable_)
-        {
+    void WriteWithFmt(T val, const std::string& fmt) {
+        if (!enable_) {
             return;
         }
         // 为数值类型预留的space
         static constexpr size_t kNumberTypeMaxSizeLimited = 64;
-        if (Reserve(kNumberTypeMaxSizeLimited))
-        {
+        if (Reserve(kNumberTypeMaxSizeLimited)) {
             write_index_ += sprintf(&logger_str_->at(write_index_), fmt.c_str(), val);
         }
     }

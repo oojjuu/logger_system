@@ -12,8 +12,7 @@ namespace logger {
 /**
 *@brief 日志对象类
 */
-class Logger
-{
+class Logger {
 public:
     Logger() = delete;
 

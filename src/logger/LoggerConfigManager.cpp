@@ -38,13 +38,11 @@ static const std::map<std::string, LogLevel> kLoggerLevelMap = {
     {"SYSTEM", LogLevel::SYSTEM}
 };
 
-LoggerConfigManager::LoggerConfigManager()
-{
+LoggerConfigManager::LoggerConfigManager() {
     configs_.emplace_back(MakeDefaultConfig());
 }
 
-LoggerConfig LoggerConfigManager::MakeDefaultConfig() const
-{
+LoggerConfig LoggerConfigManager::MakeDefaultConfig() const {
     LoggerConfig config;
     config.conf_id = kDefaultConfigId;
     config.logger_name = kDefaultLoggerName;
@@ -64,18 +62,15 @@ LoggerConfig LoggerConfigManager::MakeDefaultConfig() const
     return config;
 }
 
-bool LoggerConfigManager::Init(const std::string& config_file_path)
-{
-    if (init_)
-    {
+bool LoggerConfigManager::Init(const std::string& config_file_path) {
+    if (init_) {
         std::cerr << "config init already file:" << config_file_path << std::endl;
         return true;
     }
     init_ = true;
 
     std::ifstream fin(config_file_path);
-    if (!fin.is_open())
-    {
+    if (!fin.is_open()) {
         std::cerr << "fail to open file:" << config_file_path << std::endl;
         return false;
     }
@@ -85,26 +80,21 @@ bool LoggerConfigManager::Init(const std::string& config_file_path)
     
     std::string str_val;
     size_t i = 0;
-    while (i < data.length())
-    {
+    while (i < data.length()) {
         auto pos = data.find("\n", i);
-        if (pos == std::string::npos)
-        {
+        if (pos == std::string::npos) {
             str_val += data.substr(i, data.length() - i);
             break;
         }
         bool flag = false;
-        for (size_t j = i; j < pos; j++)
-        {
-            if (data[j] == ' ')
-            {
+        for (size_t j = i; j < pos; j++) {
+            if (data[j] == ' ') {
                 continue;
             }
             flag = (data[j] == '#' || (data[j] == '/' && j + 1 < pos && data[j + 1] == '/') );
             break;
         }
-        if (!flag)
-        {
+        if (!flag) {
             str_val += data.substr(i, pos - i + 1);
         }
         i = pos + 1;
@@ -119,19 +109,16 @@ bool LoggerConfigManager::Init(const std::string& config_file_path)
     return true;
 }
 
-bool LoggerConfigManager::ReadConfigData(const std::string& data, uint32_t conf_id, uint32_t& offset)
-{
+bool LoggerConfigManager::ReadConfigData(const std::string& data, uint32_t conf_id, uint32_t& offset) {
     LoggerConfig config = MakeDefaultConfig();
 
     uint32_t max_offset = offset;
     std::string val;
-    if (!GetKeyValue(data, offset, max_offset, "conf_id", val))
-    {
+    if (!GetKeyValue(data, offset, max_offset, "conf_id", val)) {
         return false;
     }
 
-    if (val != std::to_string(conf_id))
-    {
+    if (val != std::to_string(conf_id)) {
         std::cerr << "fail to get conf_id for conf_id must in order expected conf_id:" 
                   << conf_id << " but " << val << std::endl;
         assert(false);
@@ -141,26 +128,22 @@ bool LoggerConfigManager::ReadConfigData(const std::string& data, uint32_t conf_
     config.conf_id = conf_id;
     GetKeyValue(data, offset, max_offset, "logger_name", config.logger_name);
     GetKeyValue(data, offset, max_offset, "logger_dir_path", config.logger_dir_path);
-    if (IsExistLoggerName(config.logger_dir_path, config.logger_name))
-    {
+    if (IsExistLoggerName(config.logger_dir_path, config.logger_name)) {
         std::cerr << "config logger path exist with conf_id:" << conf_id << std::endl;
         assert(false);
         return false;
     }
 
     val.clear();
-    if (GetKeyValue(data, offset, max_offset, "level", val))
-    {
+    if (GetKeyValue(data, offset, max_offset, "level", val)) {
         transform(val.begin(), val.end(), val.begin(), ::toupper);
         auto it = kLoggerLevelMap.find(val);
-        if (it != kLoggerLevelMap.end())
-        {
+        if (it != kLoggerLevelMap.end()) {
             config.level = it->second;
         }
     }
 
     AutoGetBoolValue(data, offset, max_offset, "logger_split_with_date", config.logger_split_with_date);
-
     AutoGetBoolValue(data, offset, max_offset, "is_output_console", config.is_output_console);
     AutoGetBoolValue(data, offset, max_offset, "is_output_file", config.is_output_file);
     AutoGetBoolValue(data, offset, max_offset, "save_real_time", config.save_real_time);
@@ -178,13 +161,9 @@ bool LoggerConfigManager::ReadConfigData(const std::string& data, uint32_t conf_
     return true;
 }
 
-bool LoggerConfigManager::IsExistLoggerName(const std::string& dir_name, const std::string& logger_name)
-{
-    for(auto& it : configs_)
-    {
-        if (it.logger_name == logger_name && 
-            it.logger_dir_path == dir_name)
-        {
+bool LoggerConfigManager::IsExistLoggerName(const std::string& dir_name, const std::string& logger_name) {
+    for(auto& it : configs_) {
+        if (it.logger_name == logger_name && it.logger_dir_path == dir_name) {
             return true;
         }
     }
@@ -192,36 +171,32 @@ bool LoggerConfigManager::IsExistLoggerName(const std::string& dir_name, const s
 }
 
 void LoggerConfigManager::AutoGetBoolValue(const std::string& data, uint32_t offset, 
-                                        uint32_t& max_offset, const std::string& key, bool& val)
+                                        uint32_t& max_offset, const std::string& key, bool& val) 
 {
     std::string str_val;
-    if (!GetKeyValue(data, offset, max_offset, key, str_val))
-    {
+    if (!GetKeyValue(data, offset, max_offset, key, str_val)) {
         // std::cerr << "use default val for no key:" << key << " after offset:" << offset << std::endl;
         return;
     }
 
     transform(str_val.begin(), str_val.end(), str_val.begin(), ::tolower);
 
-    if (str_val == "true" || str_val == "1")
-    {
+    if (str_val == "true" || str_val == "1") {
         val = true;
         return;
     }
 
-    if (str_val == "false" || str_val == "0")
-    {
+    if (str_val == "false" || str_val == "0") {
         val = false;
     }
 }
 
 bool LoggerConfigManager::AutoGetIntValue(const std::string& data, uint32_t offset, uint32_t& max_offset, 
-                                        const std::string& key, uint32_t& val, uint32_t min, uint32_t max)
+                                        const std::string& key, uint32_t& val, uint32_t min, uint32_t max) 
 {
     uint64_t val_i = 0;
     bool res = AutoGetIntValue(data, offset, max_offset, key, val_i, (uint64_t)min, (uint64_t)max);
-    if (res)
-    {
+    if (res) {
         val = val_i;
     }
     return res;
@@ -231,20 +206,17 @@ bool LoggerConfigManager::AutoGetIntValue(const std::string& data, uint32_t offs
                                         const std::string& key, uint64_t& val, uint64_t min, uint64_t max)
 {
     std::string str_val;
-    if (!GetKeyValue(data, offset, max_offset, key, str_val))
-    {
+    if (!GetKeyValue(data, offset, max_offset, key, str_val)) {
         // std::cerr << "use default val for no key:" << key << " after offset:" << offset << std::endl;
         return false;
     }
 
     uint32_t int_val = (uint32_t)atol(str_val.c_str());
-    if (min <= int_val && int_val <= max)
-    {
+    if (min <= int_val && int_val <= max) {
         val = int_val;
         return true;
     }
-    else
-    {
+    else {
         std::cerr << "use default val for key:" << key << " val:" << int_val << 
             "out of range:(" << min << "," << max << ")" << std::endl; 
         return false;
@@ -255,8 +227,7 @@ bool LoggerConfigManager::GetKeyValue(const std::string& data, uint32_t offset, 
                                      const std::string& key, std::string& val)
 {
     std::string::size_type pos = data.find(key, offset);
-    if (pos == data.npos)
-    {
+    if (pos == data.npos) {
         return false;
     }
 
@@ -267,43 +238,35 @@ bool LoggerConfigManager::GetKeyValue(const std::string& data, uint32_t offset, 
     size_t max_i = std::min(i + kMaxSizeOfConfigValue, len);
     bool flag = false;
     char c;
-    while (i < max_i)
-    {
+    while (i < max_i) {
         c = data[i];
-        if (':' == c)
-        {
+        if (':' == c) {
             flag = true;
             break;
         }
-        if (c == ' ' || c == '\n')
-        {
+        if (c == ' ' || c == '\n') {
             i++;
             continue;
         }
-        else
-        {
+        else {
             max_offset = max_offset < i ? i : max_offset;
             return true;
         }
     }
 
     max_offset = max_offset < i ? i : max_offset;
-    if (!flag)
-    {
+    if (!flag) {
         return true;
     }
 
-    for (size_t j = i + 1; j < len; j++)
-    {
+    for (size_t j = i + 1; j < len; j++) {
         c = data[j];
-        if (c == ' ' || c == '\n')
-        {
+        if (c == ' ' || c == '\n') {
             val = data.substr(i+1, j-i-2);
             max_offset = max_offset < j ? j : max_offset;
             return true;
         }
     }
-    
     return true;
 }
 
