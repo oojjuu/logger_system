@@ -7,12 +7,10 @@
 
 namespace agile {
 namespace logger {
-
 /**
 *@brief 日志文件类
 */
-class LoggerFileHandler
-{
+class LoggerFileHandler {
 public:
     LoggerFileHandler() = default;
     virtual ~LoggerFileHandler();

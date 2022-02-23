@@ -7,13 +7,11 @@ using namespace agile::logger;
 /**
 *@brief 基础功能测试类
 */
-struct TestCase_Base
-{
+struct TestCase_Base {
     static void Test();
 };
 
-void TestCase_Base::Test()
-{
+void TestCase_Base::Test() {
     bool bool_val = true;
     char char_val = 123;
     uint8_t uint8_t_val = 12;

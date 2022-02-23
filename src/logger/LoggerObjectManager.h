@@ -12,11 +12,9 @@ typedef std::vector<std::shared_ptr<LoggerData>> LoggerDataVec;
 /**
 *@brief 日志管理类
 */
-class LoggerObjectManager
-{
+class LoggerObjectManager {
 public:
-	static LoggerObjectManager& GetInstance()
-	{ 
+	static LoggerObjectManager& GetInstance() { 
 		static LoggerObjectManager instance; 
 		return instance;
 	}

@@ -3,8 +3,7 @@
 #include <string>
 #include "Logger.h"
 
-class Test
-{
+class Test {
 public:
 	Test() = default;
 	~Test() = default;

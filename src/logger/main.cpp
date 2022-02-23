@@ -3,8 +3,7 @@
 #include <memory>
 #include "Logger.h"
 
-int main()
-{
+int main() {
     std::cout << "finish run test case" << std::endl;
     return 0;
 }

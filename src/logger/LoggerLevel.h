@@ -5,12 +5,11 @@
 
 namespace agile {
 namespace logger {
-
+    
 /**
 *@brief 日志等级枚举类
 */
-enum LogLevel
-{
+enum LogLevel {
     // trace日志
     TRACE     = 0,
     // debug日志

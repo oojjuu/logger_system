@@ -3,10 +3,8 @@
 namespace agile {
 namespace logger {
 
-FileHandlerList::~FileHandlerList()
-{
-    while (head_)
-    {
+FileHandlerList::~FileHandlerList() {
+    while (head_) {
         FileHandlerNode* temp = head_;
         head_ = head_->next;
         delete temp;
@@ -14,13 +12,10 @@ FileHandlerList::~FileHandlerList()
     }
 }
 
-FileHandlerNode* FileHandlerList::IsExistLoggerId(uint32_t logger_id)
-{
+FileHandlerNode* FileHandlerList::IsExistLoggerId(uint32_t logger_id) {
     FileHandlerNode* node = tail_;
-    while (node)
-    {
-        if (node->logger_id == logger_id)
-        {
+    while (node) {
+        if (node->logger_id == logger_id) {
             return node;
         }
         node = node->prev;
@@ -28,12 +23,10 @@ FileHandlerNode* FileHandlerList::IsExistLoggerId(uint32_t logger_id)
     return nullptr;
 }
 
-void FileHandlerList::EmplaceBack(FileHandlerNode* node) 
-{
+void FileHandlerList::EmplaceBack(FileHandlerNode* node) {
     ++size_;
     node->next = nullptr;
-    if (tail_ == nullptr) 
-    {
+    if (tail_ == nullptr) {
         node->prev = nullptr;
         tail_ = head_ = node;
         return;
@@ -43,20 +36,16 @@ void FileHandlerList::EmplaceBack(FileHandlerNode* node)
     tail_ = node;
 }
 
-std::shared_ptr<FileHandlerNode> FileHandlerList::PopFront() 
-{
-    if (!head_)
-    {
+std::shared_ptr<FileHandlerNode> FileHandlerList::PopFront() {
+    if (!head_) {
         return nullptr;
     }
     auto res = head_;
     head_ = head_->next;
-    if (head_)
-    {
+    if (head_) {
         head_->prev = nullptr;
     }
-    else
-    {
+    else {
         tail_ = head_;
     }
     std::shared_ptr<FileHandlerNode> res_ptr = std::make_shared<FileHandlerNode>();

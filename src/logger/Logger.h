@@ -43,13 +43,13 @@ extern const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<Log
 #define ALLevel agile::logger::LogLevel
 
 ///////////////////////////////////////////////////////////////默认日志///////////////////////////////////////////////////////////////////////////
-#define LOG_TRACE   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::TRACE).Get()
-#define LOG_DEBUG   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::DEBUG).Get()
-#define LOG_INFO    AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::INFO).Get()
-#define LOG_WARN    AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::WARN).Get()
-#define LOG_ERROR   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::ERROR).Get()
-#define LOG_FATAL   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::FATAL).Get()
-#define LOG_SYSTEM  AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::SYSTEM).Get()
+#define LOG_TRACE   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::TRACE).get()
+#define LOG_DEBUG   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::DEBUG).get()
+#define LOG_INFO    AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::INFO).get()
+#define LOG_WARN    AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::WARN).get()
+#define LOG_ERROR   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::ERROR).get()
+#define LOG_FATAL   AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::FATAL).get()
+#define LOG_SYSTEM  AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::SYSTEM).get()
 
 #define LOG_TRACE_F(format, ...) { AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::TRACE, format, ##__VA_ARGS__); }
 #define LOG_DEBUG_F(format, ...) { AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::DEBUG, format, ##__VA_ARGS__); }
@@ -60,13 +60,13 @@ extern const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<Log
 #define LOG_SYSTEM_F(format, ...) { AgileLogger(AgileCID, AgileTag, AL_FLF, ALLevel::SYSTEM, format, ##__VA_ARGS__); }
 
 ///////////////////////////////////////////////////////////////附带tag参数日志/////////////////////////////////////////////////////////////
-#define LOG_TRACE_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::TRACE).Get()
-#define LOG_DEBUG_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::DEBUG).Get()
-#define LOG_INFO_TAG(tag)    AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::INFO).Get()
-#define LOG_WARN_TAG(tag)    AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::WARN).Get()
-#define LOG_ERROR_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::ERROR).Get()
-#define LOG_FATAL_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::FATAL).Get()
-#define LOG_SYSTEM_TAG(tag)  AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::SYSTEM).Get()
+#define LOG_TRACE_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::TRACE).get()
+#define LOG_DEBUG_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::DEBUG).get()
+#define LOG_INFO_TAG(tag)    AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::INFO).get()
+#define LOG_WARN_TAG(tag)    AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::WARN).get()
+#define LOG_ERROR_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::ERROR).get()
+#define LOG_FATAL_TAG(tag)   AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::FATAL).get()
+#define LOG_SYSTEM_TAG(tag)  AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::SYSTEM).get()
 
 #define LOG_TRACE_TAG_F(tag, format, ...) { AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::TRACE, format, ##__VA_ARGS__); }
 #define LOG_DEBUG_TAG_F(tag, format, ...) { AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::DEBUG, format, ##__VA_ARGS__); }
@@ -77,13 +77,13 @@ extern const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<Log
 #define LOG_SYSTEM_TAG_F(tag, format, ...) { AgileLogger(AgileCID, #tag, AL_FLF, ALLevel::SYSTEM, format, ##__VA_ARGS__); }
 
 ///////////////////////////////////////////////////////////////附带conf_id参数日志/////////////////////////////////////////////////////////////
-#define LOG_TRACE_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::TRACE).Get()
-#define LOG_DEBUG_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::DEBUG).Get()
-#define LOG_INFO_CID(conf_id)    AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::INFO).Get()
-#define LOG_WARN_CID(conf_id)    AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::WARN).Get()
-#define LOG_ERROR_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::ERROR).Get()
-#define LOG_FATAL_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::FATAL).Get()
-#define LOG_SYSTEM_CID(conf_id)  AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::SYSTEM).Get()
+#define LOG_TRACE_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::TRACE).get()
+#define LOG_DEBUG_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::DEBUG).get()
+#define LOG_INFO_CID(conf_id)    AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::INFO).get()
+#define LOG_WARN_CID(conf_id)    AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::WARN).get()
+#define LOG_ERROR_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::ERROR).get()
+#define LOG_FATAL_CID(conf_id)   AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::FATAL).get()
+#define LOG_SYSTEM_CID(conf_id)  AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::SYSTEM).get()
 
 #define LOG_TRACE_CID_F(conf_id, format, ...) { AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::TRACE, format, ##__VA_ARGS__); }
 #define LOG_DEBUG_CID_F(conf_id, format, ...) { AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::DEBUG, format, ##__VA_ARGS__); }
@@ -94,13 +94,13 @@ extern const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<Log
 #define LOG_SYSTEM_CID_F(conf_id, format, ...) { AgileLogger(conf_id, AgileTag, AL_FLF, ALLevel::SYSTEM, format, ##__VA_ARGS__); }
 
 ///////////////////////////////////////////////////////////////附带conf_id, tag参数日志/////////////////////////////////////////////////////////////
-#define LOG_TRACE_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::TRACE).Get()
-#define LOG_DEBUG_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::DEBUG).Get()
-#define LOG_INFO_CT(conf_id, tag)    AgileLogger(conf_id, #tag, AL_FLF, ALLevel::INFO).Get()
-#define LOG_WARN_CT(conf_id, tag)    AgileLogger(conf_id, #tag, AL_FLF, ALLevel::WARN).Get()
-#define LOG_ERROR_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::ERROR).Get()
-#define LOG_FATAL_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::FATAL).Get()
-#define LOG_SYSTEM_CT(conf_id, tag)  AgileLogger(conf_id, #tag, AL_FLF, ALLevel::SYSTEM).Get()
+#define LOG_TRACE_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::TRACE).get()
+#define LOG_DEBUG_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::DEBUG).get()
+#define LOG_INFO_CT(conf_id, tag)    AgileLogger(conf_id, #tag, AL_FLF, ALLevel::INFO).get()
+#define LOG_WARN_CT(conf_id, tag)    AgileLogger(conf_id, #tag, AL_FLF, ALLevel::WARN).get()
+#define LOG_ERROR_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::ERROR).get()
+#define LOG_FATAL_CT(conf_id, tag)   AgileLogger(conf_id, #tag, AL_FLF, ALLevel::FATAL).get()
+#define LOG_SYSTEM_CT(conf_id, tag)  AgileLogger(conf_id, #tag, AL_FLF, ALLevel::SYSTEM).get()
 
 #define LOG_TRACE_CT_F(conf_id, tag, format, ...) { AgileLogger(conf_id, #tag, AL_FLF, ALLevel::TRACE, format, ##__VA_ARGS__); }
 #define LOG_DEBUG_CT_F(conf_id, tag, format, ...) { AgileLogger(conf_id, #tag, AL_FLF, ALLevel::DEBUG, format, ##__VA_ARGS__); }

@@ -10,8 +10,7 @@ namespace logger {
 /**
 *@brief 日志输出接口，完成OnLoggerMessage接口实现日志文件输出
 */
-class LoggerOutputToFile : public LoggerOutput
-{
+class LoggerOutputToFile : public LoggerOutput {
 public:
     LoggerOutputToFile() = delete;
     LoggerOutputToFile(const LoggerConfig* config):LoggerOutput(),config_(config),write_counter_(0) {}

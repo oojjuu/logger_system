@@ -6,12 +6,11 @@
 
 namespace agile {
 namespace logger {
-
+    
 /**
 *@brief 日志操作链表节点
 */
-struct FileHandlerNode 
-{
+struct FileHandlerNode {
     FileHandlerNode():file_size(0) { }
     FileHandlerNode(const std::shared_ptr<LoggerFileHandler>& v):file_size(0),file_handler(v) { }
     ~FileHandlerNode() = default;
@@ -49,14 +48,20 @@ public:
     *@brief 获取链表头部
     *@return 链表头部指针
     */
-    FileHandlerNode* Header() const { return head_; }
+    FileHandlerNode* header() const { return head_; }
 
     /**
     *@brief 获取链表尾部
     *@return 链表尾部指针
     */
-    FileHandlerNode* Tail() const { return tail_; }
+    FileHandlerNode* tail() const { return tail_; }
 
+    /**
+    *@brief 获取链表长度
+    *@return 链表长度
+    */
+    size_t size() const { return size_; }
+    
     /**
     *@brief 插入链表尾部
     *@param node 节点数据
@@ -68,12 +73,6 @@ public:
     *@return 链表头部智能指针
     */
     std::shared_ptr<FileHandlerNode> PopFront();
-
-    /**
-    *@brief 获取链表长度
-    *@return 链表长度
-    */
-    size_t Size() const { return size_; }
 
     /**
     *@brief 是否存在指定日志ID

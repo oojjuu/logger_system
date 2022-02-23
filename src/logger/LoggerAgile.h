@@ -47,7 +47,7 @@ public:
     *@brief 获取logger buffer
     *@return LoggerBuffer
     */
-    LoggerBuffer& Get() const;
+    LoggerBuffer& get() const;
 
 private:
     /**

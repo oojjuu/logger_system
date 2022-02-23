@@ -5,13 +5,11 @@
 /**
 *@brief STL功能测试类
 */
-struct TestCase_STL
-{
+struct TestCase_STL {
     static void Test();
 };
 
-void TestCase_STL::Test()
-{
+void TestCase_STL::Test() {
     std::vector<int> vec_int = {1,2,3,4,5,6};  
     { LOG_INFO << "vec_int:" << vec_int; }
 
@@ -20,8 +18,8 @@ void TestCase_STL::Test()
     
     std::vector<TestDataObject*> vec_obj = {new TestDataObject(), new TestDataObject(), new TestDataObject() };
     { LOG_ERROR << "vec_obj:" << vec_obj; }
-    for (auto& it : vec_obj)
-    {
+    
+    for (auto& it : vec_obj) {
         delete it;
         it = nullptr;
     }

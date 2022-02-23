@@ -5,12 +5,10 @@
 #include <vector>
 using namespace std;
 
-int main(int argc, char* argv[])
-{   
+int main(int argc, char* argv[]) {   
     std::cout << "args config_path thread_num sleep_micro_seconds tag" << std::endl;
     std::cout << "example: ./agile_logger_test ../conf/agile_logger.conf 0 0" << std::endl;
-    if (argc < 4)
-    {
+    if (argc < 4) {
         std::cerr << "argc num error " << std::endl;
         return 0;
     }
@@ -19,8 +17,7 @@ int main(int argc, char* argv[])
     int sleep_micro_seconds = atoi(argv[3]);
 
     std::string tag;
-    if (argc > 4)
-    {
+    if (argc > 4) {
         tag = argv[4];
     }
 

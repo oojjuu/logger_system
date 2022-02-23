@@ -10,59 +10,47 @@ namespace agile {
 namespace logger {
 
 ////////////////////////////////////////////////////////////////////////////////
-bool LoggerObjectManager::Init(const std::string& config_file_path, const std::string& file_name_tag)
-{
+bool LoggerObjectManager::Init(const std::string& config_file_path, const std::string& file_name_tag) {
 	std::lock_guard<std::mutex> lg(thread_mtx_);
-	if (init_)
-	{
+	if (init_) {
 		return true;
 	}
 	
-	if (!LoggerConfigManager::GetInstance().Init(config_file_path))
-	{
+	if (!LoggerConfigManager::GetInstance().Init(config_file_path)) {
 		return false;
 	}
 
-	const std::vector<LoggerConfig>& configs = LoggerConfigManager::GetInstance().GetConfigs();
-	for(auto& it : configs)
-	{
+	const std::vector<LoggerConfig>& configs = LoggerConfigManager::GetInstance().configs();
+	for(auto& it : configs) {
 		datas_.emplace_back(std::make_shared<LoggerObject>(it.conf_id, file_name_tag));
 	}
 	
 	th_run_ = true;
 	thread_ = std::make_shared<std::thread>(std::bind(&LoggerObjectManager::Run, this));
 	init_ = true;
-
 	return true;
 }
 
-void LoggerObjectManager::Destroy()
-{
+void LoggerObjectManager::Destroy() {
 	th_run_ = false;
 	datas_.clear();
 }
 
-const LoggerConfig* LoggerObjectManager::SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output)
-{
+const LoggerConfig* LoggerObjectManager::SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutput>&& output) {
 	const LoggerConfig* res = LoggerConfigManager::GetInstance().GetConfig(conf_id);
-	if (!res)
-	{
+	if (!res) {
 		return nullptr;
 	}
 	datas_[conf_id]->SetLoggerOutput(std::move(output));
 	return res;
 }
 
-void LoggerObjectManager::Run()
-{
-    while (th_run_)
-    {
+void LoggerObjectManager::Run() {
+    while (th_run_) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(300));
 		std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
-        for(auto& it : datas_)
-		{
-			if (!it->Sync(cur_time))
-			{
+        for(auto& it : datas_) {
+			if (!it->Sync(cur_time)) {
 				it->Flush();
 			}
 			it->CheckFileAndDisk(cur_time);
@@ -70,19 +58,16 @@ void LoggerObjectManager::Run()
     }
 }
 
-void LoggerObjectManager::Write(std::shared_ptr<LoggerData>& logger_data)
-{
+void LoggerObjectManager::Write(std::shared_ptr<LoggerData>& logger_data) {
 	datas_[logger_data->conf_id]->Write(logger_data);
 }
 
-LoggerDataVec* LoggerObjectManager::CreateLoggerBuffers()
-{
+LoggerDataVec* LoggerObjectManager::CreateLoggerBuffers() {
 	std::lock_guard<std::mutex> lg(thread_mtx_);
 
 	LoggerDataVec thread_logger_buffer;
-	const std::vector<LoggerConfig>& configs = LoggerConfigManager::GetInstance().GetConfigs();
-	for (const auto& it : configs)
-	{
+	const std::vector<LoggerConfig>& configs = LoggerConfigManager::GetInstance().configs();
+	for (const auto& it : configs) {
 		std::shared_ptr<LoggerData> logger_data = std::make_shared<LoggerData>();
 		logger_data->conf_id = it.conf_id;
 		logger_data->logger_buffer = std::make_shared<LoggerBuffer>(&it);
@@ -92,16 +77,13 @@ LoggerDataVec* LoggerObjectManager::CreateLoggerBuffers()
 	return &logger_buffers_.back();//[logger_buffers_.size() - 1];
 }
 
-int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data, bool valid_level)
-{
+int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data, bool valid_level) {
 	static thread_local LoggerDataVec* kThreadLoggerDataBuffers = nullptr;
-	if (!kThreadLoggerDataBuffers)
-	{
+	if (!kThreadLoggerDataBuffers) {
 		kThreadLoggerDataBuffers = CreateLoggerBuffers();
 	}
 	logger_data = (*kThreadLoggerDataBuffers)[conf_id];
-	if (!valid_level)
-	{
+	if (!valid_level) {
 		return 0;
 	}
 	
@@ -112,8 +94,7 @@ int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerD
 	logger_data->ptr = datas_[conf_id]->PreviousCheck(logger_data);
 
 	static __thread int kCurThreadId = 0;
-	if (kCurThreadId != 0) 
-	{
+	if (kCurThreadId != 0) {
 		return kCurThreadId;
 	}
 	kCurThreadId = syscall(SYS_gettid);

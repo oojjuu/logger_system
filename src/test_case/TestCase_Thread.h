@@ -5,8 +5,7 @@
 #include <chrono>
 #include "Logger.h"
 
-class TestCase_Thread
-{
+class TestCase_Thread {
 public:
 	TestCase_Thread() = default;
 	~TestCase_Thread() = default;

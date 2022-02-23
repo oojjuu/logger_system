@@ -19,8 +19,7 @@ namespace logger {
 /**
 *@brief 日志实例类
 */
-class LoggerObject
-{
+class LoggerObject {
 public:
 	LoggerObject(int conf_id, const std::string& file_name_tag);
 	LoggerObject() = delete;

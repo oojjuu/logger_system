@@ -12,8 +12,7 @@ namespace logger {
 /**
 *@brief 日志对象类
 */
-class Logger
-{
+class Logger {
 public:
     Logger() = delete;
 
@@ -48,7 +47,7 @@ public:
     *@brief 获取logger buffer
     *@return LoggerBuffer
     */
-    LoggerBuffer& Get() const;
+    LoggerBuffer& get() const;
 
 private:
     /**

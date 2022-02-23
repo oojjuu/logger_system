@@ -13,11 +13,9 @@ static constexpr uint64_t kLoggerBufferSize = 2048;
 /**
 *@brief 日志配置管理
 */
-class LoggerConfigManager
-{
+class LoggerConfigManager {
 public:
-    static LoggerConfigManager& GetInstance()
-    {
+    static LoggerConfigManager& GetInstance() {
         static LoggerConfigManager instance;
         return instance;
     }
@@ -36,8 +34,7 @@ public:
     *@param conf_id 配置ID
     *@return const LoggerConfig*
     */
-    const LoggerConfig* GetConfig(uint8_t conf_id) const 
-    {
+    const LoggerConfig* GetConfig(uint8_t conf_id) const {
         assert((size_t)conf_id < configs_.size());
         return &configs_[conf_id];
     }
@@ -46,7 +43,7 @@ public:
     *@brief 获取所有配置信息
     *@return 日志配置数组
     */
-    const std::vector<LoggerConfig>& GetConfigs() const { return configs_; }
+    const std::vector<LoggerConfig>& configs() const { return configs_; }
 
 private:
     LoggerConfigManager();

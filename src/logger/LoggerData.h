@@ -13,8 +13,7 @@ namespace logger {
 /**
 *@brief 日志数据类
 */
-struct LoggerData
-{
+struct LoggerData {
     LoggerData(){ }
     
     // 配置id

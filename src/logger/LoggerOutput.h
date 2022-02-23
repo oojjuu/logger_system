@@ -9,8 +9,7 @@ namespace logger {
 /**
 *@brief 日志输出接口，完成OnLoggerMessage接口实现不同的输出(如输出到控制台, 日志文件, 日志收集服务等等)
 */
-class LoggerOutput
-{
+class LoggerOutput {
 public:
     LoggerOutput() = default;
     virtual ~LoggerOutput() = default;

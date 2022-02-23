@@ -18,8 +18,7 @@ namespace logger {
 /**
 *@brief 日志buffer类
 */
-class LoggerBuffer
-{
+class LoggerBuffer {
 public:
     LoggerBuffer() = default;
     LoggerBuffer(const LoggerConfig* config);
@@ -30,37 +29,44 @@ public:
     *@brief 获取写数据游标
     *@return 游标值
     */
-    virtual size_t GetWriteIndex() const { return write_index_; }
+    virtual size_t write_index() const { return write_index_; }
     
     /**
     *@brief 设置写数据游标
     *@param val 游标值
     */
-    virtual void SetWriteIndex(size_t val) { write_index_ = val; }
+    virtual void set_write_index(size_t val) { write_index_ = val; }
 
     /**
     *@brief 移动写数据游标
     *@param val 移动游标值
     */
-    virtual void IncrWriteIndex(size_t val) { write_index_ += val; }
+    virtual void incr_write_index_by(size_t val) { write_index_ += val; }
 
     /**
     *@brief 获取buffer数据
     *@return string智能指针引用
     */
-    virtual std::shared_ptr<std::string>& Data() { return logger_str_; }
-
-    /**
-    *@brief 获取当前游标地址
-    *@return const char指针
-    */
-    virtual char* CurData() { return &logger_str_->at(write_index_); }
+    virtual std::shared_ptr<std::string>& data() { return logger_str_; }
 
     /**
     *@brief 获取日志配置信息
     *@return const LoggerConfig* 日志配置
     */
-    virtual const LoggerConfig* GetConfig() const { return config_; }
+    virtual const LoggerConfig* config() const { return config_; }
+    
+    /**
+    *@brief 设置使能
+    */
+    void set_enable(bool val) { enable_ = val; }
+
+    bool enable() const { return enable_; }
+
+    /**
+    *@brief 获取当前游标地址
+    *@return const char指针
+    */
+    virtual char* cur_data() { return &logger_str_->at(write_index_); }
 
     /**
     *@brief 检查buffer容量并做扩容操作
@@ -68,13 +74,6 @@ public:
     *@return bool
     */
     virtual bool Reserve(size_t data_size);
-
-    /**
-    *@brief 设置使能
-    */
-    void SetEnable(bool val) { enable_ = val; }
-
-    bool GetEnable() const { return enable_; }
 
     /**
     *@brief 下面是基础类型数据写入重载
@@ -120,8 +119,7 @@ public:
     */
     template<typename T, 
     typename std::enable_if<std::is_pointer<T>::value && !std::is_same<T, const char*>::value, T>::type* = nullptr>
-    LoggerBuffer& operator << (const T& val) 
-    {
+    LoggerBuffer& operator << (const T& val) {
         *this << *val;
         return *this;
     }
@@ -132,8 +130,7 @@ public:
     *@return LoggerBuffer实例
     */
     template<typename T>
-    LoggerBuffer& operator << (const std::shared_ptr<T>& val)
-    {
+    LoggerBuffer& operator << (const std::shared_ptr<T>& val) {
         *this << *val;
         return *this;
     }
@@ -144,8 +141,7 @@ public:
     *@return LoggerBuffer实例
     */
     template<typename T1, typename T2>
-    LoggerBuffer& operator << (const std::pair<T1, T2>& val)
-    {
+    LoggerBuffer& operator << (const std::pair<T1, T2>& val) {
         *this << kBracketLeftString << val.first << kStlMapEmptySplitString << val.second << kBracketRightString;
         return *this;
     }
@@ -157,8 +153,7 @@ public:
     */
     template<typename T, 
     typename std::enable_if<std::is_class<T>::value && !std::is_same<T, std::string>::value, T>::type* = nullptr>
-    LoggerBuffer& operator << (const T& val) 
-    {
+    LoggerBuffer& operator << (const T& val) {
         DoWrite<T>(val, 0);
         return *this;
     }
@@ -168,33 +163,27 @@ private:
     struct WriterFunc;
 
     template<typename T>
-    void DoWrite(const T& val, WriterFunc<T, &T::OnAgileLogger>*)
-    {
-        if (!enable_)
-        {
+    void DoWrite(const T& val, WriterFunc<T, &T::OnAgileLogger>*) {
+        if (!enable_) {
             return;
         }
         val.OnAgileLogger(*this);
     }
 
     template<typename T>
-    void DoWrite(const T& val, ...)
-    {
-        if (!enable_)
-        {
+    void DoWrite(const T& val, ...) {
+        if (!enable_) {
             return;
         }
 
-        if (val.empty())
-        {
+        if (val.empty()) {
             *this << kStlEmptyString;
             return;
         }
         
         auto it = val.begin();
         *this << kBracketLeftString << *it;
-        while (++it != val.end())
-        {
+        while (++it != val.end()) {
             *this << kStlEmptySplitString << *it;
         }
         *this << kBracketRightString;
@@ -205,16 +194,13 @@ private:
     *@param val string
     */
     template<typename T>
-    void WriteWithFmt(T val, const std::string& fmt)
-    {
-        if (!enable_)
-        {
+    void WriteWithFmt(T val, const std::string& fmt) {
+        if (!enable_) {
             return;
         }
         // 为数值类型预留的space
         static constexpr size_t kNumberTypeMaxSizeLimited = 64;
-        if (Reserve(kNumberTypeMaxSizeLimited))
-        {
+        if (Reserve(kNumberTypeMaxSizeLimited)) {
             write_index_ += sprintf(&logger_str_->at(write_index_), fmt.c_str(), val);
         }
     }
