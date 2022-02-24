@@ -1,8 +1,8 @@
 #include <iostream>
+#include <vector>
+
 #include "Test.h"
 
-#include <iostream>
-#include <vector>
 using namespace std;
 
 int main(int argc, char* argv[]) {
