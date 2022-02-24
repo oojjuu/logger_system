@@ -48,10 +48,8 @@ std::shared_ptr<FileHandlerNode> FileHandlerList::PopFront() {
     else {
         tail_ = head_;
     }
-    std::shared_ptr<FileHandlerNode> res_ptr = std::make_shared<FileHandlerNode>();
-    res_ptr.reset(res);
     --size_;
-    return res_ptr;
+    return std::shared_ptr<FileHandlerNode>(res);
 }
     
 } // namespace logger
