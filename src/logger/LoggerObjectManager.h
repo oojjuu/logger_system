@@ -28,6 +28,11 @@ public:
 	bool Init(const std::string& config_file_path, const std::string& file_name_tag);
 
 	/**
+	*@brief 销毁日志模块
+	*/
+	void Destroy();
+
+	/**
 	 *@brief 获取日志数据
 	 *@param conf_id 日志配置ID
 	 *@param logger_data 日志数据引用
@@ -40,12 +45,9 @@ public:
 	 *@brief 写入日志数据
 	 *@param logger_data 日志数据引用
 	 */
-	void Write(std::shared_ptr<LoggerData>& logger_data);
-
-	/**
-	*@brief 销毁日志模块
-	*/
-	void Destroy();
+	void Write(const std::shared_ptr<LoggerData>& logger_data) {
+		datas_[logger_data->conf_id]->Write(logger_data);
+	}
 
 	/**
 	*@brief 设置日志输出接口

@@ -4,6 +4,7 @@
 #include "LoggerConfigManager.h"
 #include "LoggerOutputToConsole.h"
 #include "LoggerOutputToFile.h"
+#include "LoggerUtil.h"
 
 namespace agile {
 namespace logger {
@@ -16,9 +17,8 @@ LoggerObject::LoggerObject(int conf_id, const std::string& file_name_tag) {
     }
 
     if (config_->is_output_file) {
-        std::shared_ptr<LoggerOutputToFile> output_file = std::make_shared<LoggerOutputToFile>(config_);
-        if (output_file->CheckAndCreateLogDir(config_->logger_dir_path)) {
-            output_file->SetFileNameTag(file_name_tag);
+        std::shared_ptr<LoggerOutputToFile> output_file = std::make_shared<LoggerOutputToFile>(file_name_tag, config_);
+        if (LoggerUtil::CheckAndCreateLogDir(config_->logger_dir_path)) {
             outputs_.emplace_back(std::move(output_file));
         }
         else {
@@ -27,55 +27,19 @@ LoggerObject::LoggerObject(int conf_id, const std::string& file_name_tag) {
     }
 }
 
-void LoggerObject::SetLoggerOutput(std::shared_ptr<LoggerOutput>&& output) {
-    outputs_.emplace_back(output);
-}
-
-void LoggerObject::CheckFileAndDisk(const std::chrono::steady_clock::time_point& cur_time) {
-    if (check_time_val_ > cur_time) {
-        return;
-    }
-    static int kCheckDiskCounter = 0;
-    check_time_val_ = cur_time + std::chrono::milliseconds(2000);
+void LoggerObject::Run(const std::chrono::steady_clock::time_point& cur_time) {
     for (auto& it : outputs_) {
-        it->CheckFiles();
-    }
-    if (++kCheckDiskCounter > 30) {
-        for (auto& it : outputs_) {
-            it->CheckDisk();
-        }
-        kCheckDiskCounter = 0;
+         it->Run(cur_time);
     }
 }
 
-void LoggerObject::Flush() {
+void LoggerObject::PreviousCheck(const std::shared_ptr<LoggerData>& logger_data) {
     for (auto& it : outputs_) {
-         it->Flush();
+        it->PreviousCheck(logger_data);
     }
 }
 
-bool LoggerObject::Sync(const std::chrono::steady_clock::time_point& cur_time) {
-    if (sysc_time_val_ > cur_time) {
-        return false;
-    }
-    sysc_time_val_ = cur_time + std::chrono::milliseconds(config_->save_interval_msec);
-    for (auto& it : outputs_) {
-         it->Sync();
-    }
-    return true;
-}
-
-void* LoggerObject::PreviousCheck(std::shared_ptr<LoggerData>& logger_data) {
-    for (auto& it : outputs_) {
-        auto val = it->PreviousCheck(logger_data);
-        if (val) {
-            return val;
-        }
-    }
-    return nullptr;
-}
-
-void LoggerObject::Write(std::shared_ptr<LoggerData>& logger_data) {
+void LoggerObject::Write(const std::shared_ptr<LoggerData>& logger_data) {
     for (auto& it : outputs_) {
         it->OnLoggerData(logger_data);
     }

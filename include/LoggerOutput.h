@@ -15,31 +15,15 @@ public:
     virtual ~LoggerOutput() = default;
 
     /**
-    *@brief 刷新日志
-    */ 
-    virtual void Flush() { }
-
-    /**
-    *@brief 同步日志
-    */ 
-    virtual void Sync() { }
-
-    /**
-    *@brief 定时检查日志文件大小
-    */ 
-    virtual void CheckFiles() { }
-
-    /**
-    *@brief 定时检查磁盘
-    */ 
-    virtual void CheckDisk() { }
-
-    /**
     *@brief 预先检查日志接口
     *@param logger_data日志
-    *@param 返回指针数据(文件操作句柄)
     */
-    virtual void* PreviousCheck(std::shared_ptr<LoggerData>& logger_data) { return nullptr; }
+    virtual void PreviousCheck(const std::shared_ptr<LoggerData>& logger_data) { }
+
+	/**
+	*@brief 定时执行函数 300毫秒执行一次
+	*/
+	virtual void Run(const std::chrono::steady_clock::time_point& cur_time) { }
 
     /**
     *@brief 日志输出回调接口

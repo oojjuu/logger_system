@@ -1,5 +1,7 @@
 #include "LoggerOutputToFile.h"
 
+#include "LoggerUtil.h"
+
 #include <unistd.h>
 #include <fstream>
 #include <iostream>
@@ -24,39 +26,40 @@ LoggerOutputToFile::~LoggerOutputToFile() {
         FileHandlerNode* node = file_handler_list_->tail();
         while (node) {
             if (!node->is_finish) {
-                 Rename(node->logger_id, node->file_path);
+                LoggerUtil::RenameLogingToLog(node->file_path);
             }
             node = node->prev;
         }
     }
 }
 
-void* LoggerOutputToFile::PreviousCheck(std::shared_ptr<LoggerData>& logger_data) {
+void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& logger_data) {
     uint32_t file_date_time = logger_data->tm_time.tm_year;
     file_date_time <<= 4;
     file_date_time |= logger_data->tm_time.tm_mon;
     file_date_time <<= 6;
     file_date_time |= logger_data->tm_time.tm_mday;
 
+    logger_data->ptr = nullptr;
     if (!file_handler_list_) {
         if (!CreateLoggerFile(file_date_time, 1)) {
-            return nullptr;
+            return;
         }
     }
 
     FileHandlerNode* tail = file_handler_list_->tail();
     if (tail->file_size >= config_->logger_file_size) {
         if (!CreateLoggerFile(file_date_time, 2)) {
-            return nullptr;
+            return;
         }
     }
     
     if (config_->logger_split_with_date && tail->file_date_time != file_date_time) {
         if (!CreateLoggerFile(file_date_time, 3)) {
-            return nullptr;
+            return;
         }
     }
-    return file_handler_list_->tail();
+    logger_data->ptr = file_handler_list_->tail();
 }
 
 bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_type) {
@@ -117,7 +120,7 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
 
     FileHandlerNode* tail = file_handler_list_->tail();
     if (tail) {
-        tail->file_path = Rename(tail->logger_id, tail->file_path);
+        tail->file_path = LoggerUtil::RenameLogingToLog(tail->file_path);
         tail->is_finish = true;
         tail->finish_time = std::chrono::steady_clock::now();
         tail->file_handler->Flush();
@@ -163,7 +166,6 @@ void LoggerOutputToFile::RenameAllFilesLoggerId() {
                 node->logger_id = start_id;
             }
         }
-
         cur_log_id_ = start_id;
         ++start_id;
         ++it;
@@ -184,6 +186,39 @@ void LoggerOutputToFile::CheckAndDeleteFileNameMap() {
     }
 }
 
+void LoggerOutputToFile::Run(const std::chrono::steady_clock::time_point& cur_time) {
+    if (!file_handler_list_) {
+        return;
+    }
+
+    bool sys_call = false;
+    if (sysc_time_val_ < cur_time) {
+        sysc_time_val_ = cur_time + std::chrono::milliseconds(config_->save_interval_msec);
+        sys_call = true;
+    }
+
+    FileHandlerNode* node = file_handler_list_->tail();
+    while (node && !node->is_finish) {
+        if (sys_call) {
+            node->file_handler->Sync();
+        }
+        node->file_handler->Flush();
+        node = node->prev;
+    }
+
+    static uint32_t kCheckFilesInterval = 10000;
+    if (check_file_time_val_ < cur_time) {
+        check_file_time_val_ = cur_time + std::chrono::milliseconds(kCheckFilesInterval);
+        CheckFiles();
+    }
+
+    static uint32_t kCheckDiskInterval = 300000;
+    if (check_disk_time_val_ < cur_time) {
+        check_disk_time_val_ = cur_time + std::chrono::milliseconds(kCheckDiskInterval);
+        CheckDisk();
+    }
+}
+
 void LoggerOutputToFile::OnLoggerData(const std::shared_ptr<LoggerData>& logger_data) {
     if (!logger_data->ptr) {
         return;
@@ -195,45 +230,16 @@ void LoggerOutputToFile::OnLoggerData(const std::shared_ptr<LoggerData>& logger_
         node->file_handler->SyncWrite(logger_data);
         return;
     }
-
-    if (config_->save_on_logger_num == 0) {
-        node->file_handler->AsynWirte(logger_data);
-        return;
-    }
+    node->file_handler->AsynWirte(logger_data);
     ++write_counter_;
-    if (write_counter_ > config_->save_on_logger_num) {
+    
+    if (config_->save_on_logger_num > 0 && write_counter_ > config_->save_on_logger_num) {
         write_counter_ = 0;
-        node->file_handler->SyncWrite(logger_data);
-    }
-}
-
-void LoggerOutputToFile::Sync() {
-    if (!file_handler_list_) {
-        return;
-    }
-    FileHandlerNode* node = file_handler_list_->tail();
-    while (node && !node->is_finish) {
         node->file_handler->Sync();
-        node = node->prev;
-    }
-}
-
-void LoggerOutputToFile::Flush() {
-    if (!file_handler_list_) {
-        return;
-    }
-    FileHandlerNode* node = file_handler_list_->tail();
-    while (node && !node->is_finish) {
-        node->file_handler->Flush();
-        node = node->prev;
     }
 }
 
 void LoggerOutputToFile::CheckFiles() {
-    if (!file_handler_list_) {
-        return;
-    }
-
     std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
     FileHandlerNode* node = file_handler_list_->tail();
     while (node) {
@@ -248,7 +254,7 @@ void LoggerOutputToFile::CheckFiles() {
             }
         }
         else {
-            int64_t file_size = GetFileSize(node->file_path);
+            int64_t file_size = LoggerUtil::GetFileSize(node->file_path);
             if (file_size > 0) {
                 node->file_size = (uint64_t)file_size;
             }
@@ -258,7 +264,7 @@ void LoggerOutputToFile::CheckFiles() {
 }
 
 void LoggerOutputToFile::CheckDisk() {
-    long long free_size = GetDiskFreeCapacity(config_->logger_dir_path);
+    long long free_size = LoggerUtil::GetDiskFreeCapacity(config_->logger_dir_path);
     if (disk_free_size_limit_ == 0) {
         disk_free_size_limit_ = (long long)config_->logger_buffer_size_limit * 10;
     }
@@ -296,49 +302,19 @@ void LoggerOutputToFile::CheckDisk() {
     }
 }
 
-long long LoggerOutputToFile::GetDiskFreeCapacity(const std::string& path) {
-    struct statfs buffer;
-    int res = statfs(path.c_str(), &buffer);
-    return res < 0 ? res : (long long)buffer.f_bsize * (long long)buffer.f_bfree;
-}
-
-int64_t LoggerOutputToFile::GetFileSize(const std::string& file_name) {
-    struct stat statbuf;
-    return 0 == stat(file_name.c_str(), &statbuf) ? statbuf.st_size : -1;
-}
-
-std::string LoggerOutputToFile::Rename(uint32_t logger_id, const std::string& loging_file) {
-    static const std::string kLogingString = "loging";
-    if (loging_file.length() <= kLogingString.length()) {
-        return "";
-    }
-    size_t index = loging_file.length() - kLogingString.length();
-    for (size_t i = 0; i < kLogingString.length(); i++) {
-        if (loging_file[i + index] != kLogingString[i]) {
-            return "";
-        }
-    }
-    if (0 != access(loging_file.c_str(), 0)) {
-        return "";
-    }
-    std::string new_name = loging_file.substr(0, loging_file.length() - 3);
-    rename(loging_file.c_str(), new_name.c_str());
-    return new_name;
-}
-
 std::string LoggerOutputToFile::GetLoggerFileName() {
     if (file_handler_list_) {
-        return GetLoggerFileNameByLoggerId(cur_log_id_ + 1, cur_log_id_);
+        return LoggerUtil::GetLoggerFileNameByLoggerId(config_, file_name_tag_, cur_log_id_ + 1, cur_log_id_);
     }
 
     std::vector<std::string> files_name;
     std::string fliter = config_->logger_name + "_" + file_name_tag_;
-    if (!GetLoggerFiles(config_->logger_dir_path, fliter, files_name)) {
+    if (!LoggerUtil::GetLoggerFiles(config_->logger_dir_path, fliter, files_name)) {
         return "";
     }
 
     std::vector<int64_t> logger_ids;
-    uint32_t res_id = GetLoggerOrderId(files_name, logger_ids);
+    uint32_t res_id = LoggerUtil::GetLoggerOrderIds(files_name, logger_ids);
 
     file_name_map_.clear();
     for (size_t i = 0; i < files_name.size(); i++) {
@@ -353,135 +329,7 @@ std::string LoggerOutputToFile::GetLoggerFileName() {
         }
         file_name_map_[logger_ids[i]] = files_name[i];
     }
-    return GetLoggerFileNameByLoggerId(res_id, cur_log_id_);
-}
-
-std::string LoggerOutputToFile::GetLoggerFileNameByLoggerId(uint32_t logger_id, uint32_t& new_logger_id) {
-    std::string file_path = config_->logger_dir_path;
-    if (file_path.back() != '/') {
-        file_path += "/";
-    }
-    file_path += config_->logger_name;
-    if (!file_name_tag_.empty()) {
-        file_path += ("_" + file_name_tag_);
-    }
-    file_path += "_";
-
-    uint32_t temp_id = logger_id;
-    std::string file_name = file_path + std::to_string(logger_id) + ".loging";
-    std::string file_name_log = file_path + std::to_string(logger_id) + ".log";
-    int loop_num = (int)config_->logger_file_number + 1;
-    int ret1 = access(file_name.c_str(), 0);
-    int ret2 = access(file_name_log.c_str(), 0);
-    while ( (0 == ret1 || 0 == ret2 ) && --loop_num > 0) {
-        if (0 == ret1) {
-            int64_t file_size = GetFileSize(file_name);
-            if (file_size > 0 && file_size < (int64_t)config_->logger_file_size) {
-                break;
-            }
-        }
-        file_name = file_path + std::to_string(++logger_id) + ".loging";
-        file_name_log = file_path + std::to_string(logger_id) + ".log";
-    }
-    if (loop_num < 1) {
-        logger_id = temp_id;
-        file_name = file_path + std::to_string(logger_id) + ".loging";
-        remove(file_name.c_str());
-    }
-    new_logger_id = logger_id;
-    return file_name;
-}
-
-uint32_t LoggerOutputToFile::GetLoggerOrderId(const std::vector<std::string>& files_name, 
-                                                                std::vector<int64_t>& logger_ids)
-{
-    if (files_name.empty()) {
-        return 0;
-    }
-    size_t size = files_name.size();
-    logger_ids.resize(size);
-
-    uint32_t max_id = 0;
-    for (size_t i = 0; i < size; i++) {
-        const std::string& str = files_name[i];
-        size_t pos1 = str.rfind('.');
-        size_t pos2 = str.rfind('_');
-        if (pos1 == std::string::npos || pos2 == std::string::npos) {
-            logger_ids[i] = -1;
-            continue;
-        }
-        std::string num_str = str.substr(pos2 + 1, pos1 - pos2 - 1);
-        uint32_t id_val = (uint32_t)atol(num_str.c_str());
-        logger_ids[i] = (int64_t)id_val;
-        if (id_val >= max_id) {
-            max_id = id_val + 1;
-        }
-    }
-    return max_id;
-}
-
-bool LoggerOutputToFile::GetLoggerFiles(const std::string& path, const std::string& fliter, std::vector<std::string>& res) {
-    DIR* direct_ptr = opendir(path.c_str());
-    if (!direct_ptr) {
-        std::cerr << "fail to opendir dir_path:" << path << std::endl;
-        return false;
-    }
-    std::string pre_path = path;
-    if (pre_path.back() != '/') {
-        pre_path += "/";
-    }
-    struct dirent* entry = nullptr;
-    while ((entry = readdir(direct_ptr))) {
-        if (entry->d_name[0] == '.') {
-            continue;
-        }
-
-        std::string name = entry->d_name;
-        std::string file_path = pre_path + name;
-        struct stat buffer;
-        if(!(stat(file_path.c_str(), &buffer) == 0 && S_ISREG(buffer.st_mode))) {
-            continue;
-        }
-        if (name.find(fliter) != std::string::npos) {
-            res.emplace_back(std::move(file_path));
-        }
-    }
-    return true;
-}
-
-bool LoggerOutputToFile::CheckAndCreateLogDir(const std::string& dir_path) {
-    if (dir_path.empty()) {
-        std::cerr << "dir_path is empty" << std::endl;
-        return false;
-    }
-
-    DIR* dir = opendir(dir_path.c_str());
-    if (dir) {
-        closedir(dir);
-        return true;
-    }
-    
-    std::string path = dir_path;
-    if (path.back() != '/') {
-        path += '/';
-    }
-    size_t pre_index = 0;
-    size_t pos = 0;
-    while ((pos = path.find_first_of('/', pre_index)) != std::string::npos) {
-        std::string dir_str = path.substr(0, pos++);
-        pre_index = pos;
-        if (dir_str.empty()) {
-            continue;
-        }
-        if (0 == mkdir(dir_str.c_str(), 0777)) {
-            continue;
-        }
-        if (errno != EEXIST) {
-            std::cerr << "fail to mkdir dir_path:" << dir_str << std::endl;
-            return false;
-        }
-    }
-    return true;
+    return LoggerUtil::GetLoggerFileNameByLoggerId(config_, file_name_tag_, res_id, cur_log_id_);
 }
 
 } // namespace logger

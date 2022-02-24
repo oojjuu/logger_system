@@ -13,9 +13,7 @@ namespace logger {
 /**
 *@brief 日志数据类
 */
-struct LoggerData {
-    LoggerData(){ }
-    
+struct LoggerData {    
     // 配置id
     uint32_t conf_id = 0;
     // 标签
