@@ -39,31 +39,33 @@ void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& logger
     file_date_time |= logger_data->tm_time.tm_mon;
     file_date_time <<= 6;
     file_date_time |= logger_data->tm_time.tm_mday;
-
     logger_data->ptr = nullptr;
-    if (!file_handler_list_) {
-        if (!CreateLoggerFile(file_date_time, 1)) {
-            return;
-        }
-    }
-
-    FileHandlerNode* tail = file_handler_list_->tail();
-    if (tail->file_size >= config_->logger_file_size) {
-        if (!CreateLoggerFile(file_date_time, 2)) {
-            return;
-        }
-    }
-    
-    if (config_->logger_split_with_date && tail->file_date_time != file_date_time) {
-        if (!CreateLoggerFile(file_date_time, 3)) {
+    int type_val = GetCreateType(file_date_time);
+    if (type_val > 0) {
+        if (!CreateLoggerFile(file_date_time, type_val)) {
             return;
         }
     }
     logger_data->ptr = file_handler_list_->tail();
 }
 
-bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_type) {
-    std::lock_guard<std::mutex> lock(mtx_);
+int LoggerOutputToFile::GetCreateType(uint32_t file_date_time) {
+    if (!file_handler_list_) {
+        return 1;
+    }
+
+    FileHandlerNode* tail = file_handler_list_->tail();
+    if (tail->file_size >= config_->logger_file_size) {
+        return 2;
+    }
+
+    if (config_->logger_split_with_date && tail->file_date_time != file_date_time) {
+        return 3;
+    }
+    return -1;
+}
+
+bool LoggerOutputToFile::IsCreated(uint32_t file_date_time, int create_type) {
     switch (create_type) {
         case 1: {
                 if (file_handler_list_) {
@@ -88,6 +90,14 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
         default:
             break;
     }
+    return false;
+}
+
+bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_type) {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (IsCreated(file_date_time, create_type)) {
+        return true;
+    }
     std::string file_path = GetLoggerFileName();
     if (file_path.empty()) {
         return false;
@@ -100,20 +110,15 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
     }
     file_name_map_[cur_log_id_] = file_path;
 
-    static uint32_t kMaxLoggerIdLimit = 100000000;
+    static uint32_t kMaxLoggerIdLimit = 1000;//100000000;
     if (kMaxLoggerIdLimit < cur_log_id_) {
         RenameAllFilesLoggerId();
     }
     
-    FileHandlerNode* node = new FileHandlerNode(file_handler);
-    node->logger_id = cur_log_id_;
-    node->file_date_time = file_date_time;
-    node->file_path = file_path;
-
+    FileHandlerNode* node = new FileHandlerNode(cur_log_id_, file_date_time, file_path, file_handler);
     if (!file_handler_list_) {
-        std::shared_ptr<FileHandlerList> file_handler_list = std::make_shared<FileHandlerList>();
-        file_handler_list->EmplaceBack(node);
-        file_handler_list_ = file_handler_list;
+        file_handler_list_ = std::make_shared<FileHandlerList>();
+        file_handler_list_->EmplaceBack(node);
         CheckAndDeleteFileNameMap();
         return true;
     }
@@ -131,13 +136,9 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
     if (file_handler_list_->size() > config_->logger_file_number) {
         auto del_node = file_handler_list_->PopFront();
         if (del_node) {
-            del_node->file_handler->Sync();
             del_node->file_handler->Close();
-            auto it = file_name_map_.find(del_node->logger_id);
-            if (it != file_name_map_.end()) {
-                remove(it->second.c_str());
-                file_name_map_.erase(it);
-            }
+            remove(del_node->file_path.c_str());
+            file_name_map_.erase(del_node->logger_id);
         }
     }
     CheckAndDeleteFileNameMap();
@@ -147,28 +148,25 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
 void LoggerOutputToFile::RenameAllFilesLoggerId() {
     std::map<uint32_t, std::string> new_file_name_map;
     uint32_t start_id = 0;
-    auto it = file_name_map_.begin();
-    while (it != file_name_map_.end()) {
-        size_t pos1 = it->second.rfind('.');
-        size_t pos2 = it->second.rfind('_');
+    for (auto& it : file_name_map_) {
+        size_t pos1 = it.second.rfind('.');
+        size_t pos2 = it.second.rfind('_');
         if (pos1 == std::string::npos || pos2 == std::string::npos) {
-            ++it;
             continue;
         }
-        std::string file_name = it->second.substr(0, pos2) + "_" + std::to_string(start_id) + it->second.substr(pos1);
 
+        std::string file_name = it.second.substr(0, pos2) + "_" + std::to_string(start_id) + it.second.substr(pos1);
         new_file_name_map[start_id] = file_name;
-        rename(it->second.c_str(), file_name.c_str());
+        rename(it.second.c_str(), file_name.c_str());
+
         if (file_handler_list_) {
-            auto node = file_handler_list_->IsExistLoggerId(it->first);
+            auto node = file_handler_list_->IsExistLoggerId(it.first);
             if (node) {
                 node->file_path = file_name;
                 node->logger_id = start_id;
             }
         }
-        cur_log_id_ = start_id;
-        ++start_id;
-        ++it;
+        cur_log_id_ = start_id++;
     } 
     file_name_map_.swap(new_file_name_map);
 }
@@ -191,25 +189,24 @@ void LoggerOutputToFile::Run(const std::chrono::steady_clock::time_point& cur_ti
         return;
     }
 
-    bool sys_call = false;
-    if (sysc_time_val_ < cur_time) {
+    bool sys_call = sysc_time_val_ > cur_time;
+    if (sys_call) {
         sysc_time_val_ = cur_time + std::chrono::milliseconds(config_->save_interval_msec);
-        sys_call = true;
     }
 
     FileHandlerNode* node = file_handler_list_->tail();
     while (node && !node->is_finish) {
+        node->file_handler->Flush();
         if (sys_call) {
             node->file_handler->Sync();
         }
-        node->file_handler->Flush();
         node = node->prev;
     }
 
     static uint32_t kCheckFilesInterval = 10000;
     if (check_file_time_val_ < cur_time) {
         check_file_time_val_ = cur_time + std::chrono::milliseconds(kCheckFilesInterval);
-        CheckFiles();
+        CheckFiles(cur_time);
     }
 
     static uint32_t kCheckDiskInterval = 300000;
@@ -239,8 +236,7 @@ void LoggerOutputToFile::OnLoggerData(const std::shared_ptr<LoggerData>& logger_
     }
 }
 
-void LoggerOutputToFile::CheckFiles() {
-    std::chrono::steady_clock::time_point cur_time = std::chrono::steady_clock::now();
+void LoggerOutputToFile::CheckFiles(const std::chrono::steady_clock::time_point& cur_time) {
     FileHandlerNode* node = file_handler_list_->tail();
     while (node) {
         if (node->is_finish) {
@@ -272,11 +268,9 @@ void LoggerOutputToFile::CheckDisk() {
         return;
     }
 
-    int64_t tail_id = -1;
     FileHandlerNode* node = file_handler_list_->tail();
-    if (node) {
-        tail_id = node->logger_id;
-    }
+    int64_t tail_id = node ? node->logger_id : -1;
+ 
     std::vector<std::string> del_files;
     {
         std::lock_guard<std::mutex> lock(mtx_);

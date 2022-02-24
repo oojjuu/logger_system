@@ -11,10 +11,11 @@ namespace logger {
 *@brief 日志操作链表节点
 */
 struct FileHandlerNode {
-    FileHandlerNode():file_size(0) { }
-    FileHandlerNode(const std::shared_ptr<LoggerFileHandler>& v):file_size(0),file_handler(v) { }
+    FileHandlerNode() = delete;
+    FileHandlerNode(uint32_t logger_id, uint32_t file_date_time, const std::string& file_path, 
+                    const std::shared_ptr<LoggerFileHandler>& v): logger_id(logger_id), file_size(0),
+                    file_date_time(file_date_time), file_path(file_path), file_handler(v) { }
     ~FileHandlerNode() = default;
-
     // 日志id
     uint32_t logger_id = 0;
     // file size

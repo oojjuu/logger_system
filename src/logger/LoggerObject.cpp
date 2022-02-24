@@ -17,9 +17,8 @@ LoggerObject::LoggerObject(int conf_id, const std::string& file_name_tag) {
     }
 
     if (config_->is_output_file) {
-        std::shared_ptr<LoggerOutputToFile> output_file = std::make_shared<LoggerOutputToFile>(file_name_tag, config_);
         if (LoggerUtil::CheckAndCreateLogDir(config_->logger_dir_path)) {
-            outputs_.emplace_back(std::move(output_file));
+            outputs_.emplace_back(std::make_shared<LoggerOutputToFile>(file_name_tag, config_));
         }
         else {
             std::cerr << "fail to do logger_dir_path:" << config_->logger_dir_path << std::endl;
@@ -43,7 +42,6 @@ void LoggerObject::Write(const std::shared_ptr<LoggerData>& logger_data) {
     for (auto& it : outputs_) {
         it->OnLoggerData(logger_data);
     }
-    logger_data->logger_buffer->set_write_index(0);
 }
 
 } // namespace logger

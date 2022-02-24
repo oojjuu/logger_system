@@ -66,7 +66,7 @@ LoggerDataVec* LoggerObjectManager::CreateLoggerBuffers() {
 		thread_logger_buffer.emplace_back(std::move(logger_data));
 	}
 	logger_buffers_.emplace_back(std::move(thread_logger_buffer));
-	return &logger_buffers_.back();//[logger_buffers_.size() - 1];
+	return &logger_buffers_.back();
 }
 
 int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data, bool valid_level) {

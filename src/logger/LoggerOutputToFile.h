@@ -15,7 +15,7 @@ class LoggerOutputToFile : public LoggerOutput {
 public:
     LoggerOutputToFile() = delete;
     LoggerOutputToFile(const std::string& tag, const LoggerConfig* config):LoggerOutput(),
-                    file_name_tag_(tag),config_(config),write_counter_(0) { }
+                    file_name_tag_(tag), config_(config), write_counter_(0) { }
     virtual ~LoggerOutputToFile();
 
     /**
@@ -39,7 +39,7 @@ private:
     /**
     *@brief 定时检查日志文件大小
     */ 
-    void CheckFiles();
+    void CheckFiles(const std::chrono::steady_clock::time_point& cur_time);
 
     /**
     *@brief 定时检查磁盘
@@ -53,12 +53,26 @@ private:
     std::string GetLoggerFileName();
 
     /**
+    *@brief 获取创建类型
+    *@return create_type 1:init 2:file size limit 3:date
+    */
+    int GetCreateType(uint32_t file_date_time);
+
+    /**
     *@brief 创建日志文件
     *@param file_date_time 日期时间
     *@param create_type 1:init 2:file size limit 3:date
     *@return bool 是否成功
     */
     bool CreateLoggerFile(uint32_t file_date_time, int create_type);
+
+    /**
+    *@brief 是否已创建日志文件
+    *@param file_date_time 日期时间
+    *@param create_type 1:init 2:file size limit 3:date
+    *@return bool 是否已创建
+    */
+    bool IsCreated(uint32_t file_date_time, int create_type);
 
     /**
     *@brief 重命名所有日志logger_id

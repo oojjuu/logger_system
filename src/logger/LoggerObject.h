@@ -24,6 +24,14 @@ public:
 	LoggerObject(int conf_id, const std::string& file_name_tag);
 	LoggerObject() = delete;
 	~LoggerObject() = default;
+	
+	/**
+	*@brief 添加日志输出接口
+	*@param output 输出对象
+	*/
+	void SetLoggerOutput(std::shared_ptr<LoggerOutput>&& output) {
+		outputs_.emplace_back(output);
+	}
 
     /**
     *@brief 预先检查日志接口
@@ -36,14 +44,6 @@ public:
 	 *@param logger_data 日志数据引用
 	 */
 	void Write(const std::shared_ptr<LoggerData>& logger_data);
-
-	/**
-	*@brief 添加日志输出接口
-	*@param output 输出对象
-	*/
-	void SetLoggerOutput(std::shared_ptr<LoggerOutput>&& output) {
-		outputs_.emplace_back(output);
-	}
 
 	/**
 	*@brief 定时执行函数 300毫秒执行一次

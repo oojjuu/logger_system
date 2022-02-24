@@ -91,6 +91,7 @@ Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file
 
 		logger_buffer->incr_write_index_by(index);
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
+		kThreadLoggerData->logger_buffer->set_write_index(0);
 	}
 }
 
@@ -98,6 +99,7 @@ Logger::~Logger() {
 	if (kIsEnableLogger && kThreadLoggerData->logger_buffer->enable()) {
 		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
+		kThreadLoggerData->logger_buffer->set_write_index(0);
 	}
 	kThreadLoggerData = nullptr;
 }
@@ -124,50 +126,58 @@ bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::strin
 	kThreadLoggerData->conf_id = conf_id;
 	kThreadLoggerData->tag = tag;
 	kThreadLoggerData->logger_buffer->set_enable(true);
+	kThreadLoggerData->logger_buffer->set_write_index(0);
 	if (!config->logger_with_header) {
 		return true;
 	}
-	static pid_t cur_pid = getpid();
 
 	size_t reserve_size = kLoggerHeaderElementMaxSizeLimited + file.length() + func.length();
 	kThreadLoggerData->logger_buffer->Reserve(reserve_size);
 
-	size_t index = kThreadLoggerData->logger_buffer->write_index();
 	std::shared_ptr<std::string>& buffer_str = kThreadLoggerData->logger_buffer->data();
-
 	const std::string& level_str = kLoggerLevelNames[(uint8_t)level];
-	memcpy(&buffer_str->at(index), level_str.c_str(), level_str.length());
-	index += level_str.length();
+
+	size_t index = 0;
+	size_t size = level_str.length();
+	memcpy(&buffer_str->at(index), level_str.c_str(), size);
+	index += size;
 
     index += snprintf(&buffer_str->at(index), kLoggerDateTypeMaxSizeLimited, "%4d-%02d-%02d %02d:%02d:%02d", 
 	kThreadLoggerData->tm_time.tm_year, kThreadLoggerData->tm_time.tm_mon, kThreadLoggerData->tm_time.tm_mday,
 	kThreadLoggerData->tm_time.tm_hour, kThreadLoggerData->tm_time.tm_min, kThreadLoggerData->tm_time.tm_sec);
 
+	static pid_t cur_pid = getpid();
 	if (tag.empty()) {
 		index += sprintf(&buffer_str->at(index), " [%d][%d] ", cur_pid, cur_tid);
 	} 
 	else {
 		index += sprintf(&buffer_str->at(index), " [%d][%d] [", cur_pid, cur_tid);
 		
-		memcpy(&buffer_str->at(index), tag.c_str(), tag.length());
-		index += tag.length();
+		size = tag.length();
+		memcpy(&buffer_str->at(index), tag.c_str(), size);
+		index += size;
 
-		memcpy(&buffer_str->at(index), kLoggertagSplitChar.c_str(), kLoggertagSplitChar.length());
-		index += kLoggertagSplitChar.length();
+		size = kLoggertagSplitChar.length();
+		memcpy(&buffer_str->at(index), kLoggertagSplitChar.c_str(), size);
+		index += size;
 	}
 
-	memcpy(&buffer_str->at(index), file.c_str(), file.length());
-	index += file.length();
+	size = file.length();
+	memcpy(&buffer_str->at(index), file.c_str(), size);
+	index += size;
 
-	memcpy(&buffer_str->at(index), kLoggerFileLineSplit.c_str(), kLoggerFileLineSplit.length());
-	index += kLoggerFileLineSplit.length();
+	size = kLoggerFileLineSplit.length();
+	memcpy(&buffer_str->at(index), kLoggerFileLineSplit.c_str(), size);
+	index += size;
 
-	memcpy(&buffer_str->at(index), func.c_str(), func.length());
-	index += func.length();
+	size = func.length();
+	memcpy(&buffer_str->at(index), func.c_str(), size);
+	index += size;
 
 	index += sprintf(&buffer_str->at(index), ":%d ", line);
 
 	kThreadLoggerData->logger_buffer->set_write_index(index);
+
 	return true;
 }
 
