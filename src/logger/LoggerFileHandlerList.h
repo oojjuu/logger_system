@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <atomic>
+
 #include "LoggerFileHandler.h"
 
 namespace agile {

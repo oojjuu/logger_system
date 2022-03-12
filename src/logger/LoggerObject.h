@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+
 #include "LoggerData.h"
 #include "LoggerConfig.h"
 #include "LoggerOutput.h"
@@ -55,10 +56,6 @@ private:
     const LoggerConfig* config_ = nullptr;
 	// output列表
 	std::list<std::shared_ptr<LoggerOutput>> outputs_;
-	// 定时同步日志时间
-	std::chrono::steady_clock::time_point sysc_time_val_;
-	// 定时检查日志时间
-	std::chrono::steady_clock::time_point check_time_val_;
 };
 
 } // namespace logger

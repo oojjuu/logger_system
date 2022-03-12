@@ -1,15 +1,6 @@
 #include "LoggerAgile.h"
 
-#include <unistd.h>
-#include <sys/types.h>
 #include <assert.h>
-#include <vector>
-#include <cstring>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <thread>
-#include <iostream>
 
 #include "LoggerData.h"
 #include "LoggerObjectManager.h"
@@ -59,17 +50,13 @@ const LoggerConfig* SetLoggerOutput(uint32_t conf_id, std::shared_ptr<LoggerOutp
 	return LoggerObjectManager::GetInstance().SetLoggerOutput(conf_id, std::move(output));
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // logger data缓存
 static thread_local std::shared_ptr<LoggerData> kThreadLoggerData = nullptr;
 // logger buffer
 static thread_local std::shared_ptr<LoggerBuffer> kThreadLoggerBuffer = nullptr;
-
-LoggerBuffer& Logger::get() const {
-	if (!kIsEnableLogger) {
-		return *kThreadLoggerBuffer;
-	}
-	return *kThreadLoggerData->logger_buffer;
-}
 
 Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
 				int line, const std::string& func, LogLevel level) {
@@ -90,43 +77,55 @@ Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file
 		va_end(vlist);
 
 		logger_buffer->incr_write_index_by(index);
+
+		*logger_buffer << kLoggerFileLineChar;
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
-		kThreadLoggerData->logger_buffer->set_write_index(0);
+		kThreadLoggerData = nullptr;
 	}
 }
 
 Logger::~Logger() {
-	if (kIsEnableLogger && kThreadLoggerData->logger_buffer->enable()) {
+	if (kThreadLoggerData) {
 		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
 		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
-		kThreadLoggerData->logger_buffer->set_write_index(0);
+		kThreadLoggerData = nullptr;
 	}
-	kThreadLoggerData = nullptr;
+}
+
+LoggerBuffer& Logger::get() const {
+	return kThreadLoggerData ? *kThreadLoggerData->logger_buffer : *kThreadLoggerBuffer;
+}
+
+void InitThreadLoggerBuffer() {
+	if (!kThreadLoggerBuffer) {
+		kThreadLoggerBuffer = std::make_shared<LoggerBuffer>();
+		kThreadLoggerBuffer->set_enable(false);
+	}
 }
 
 bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file, 
 						int line, const std::string& func, LogLevel level) {
 	if (!kIsEnableLogger) {
-		if (!kThreadLoggerBuffer) {
-			kThreadLoggerBuffer = std::make_shared<LoggerBuffer>();
-		}
-		kThreadLoggerBuffer->set_enable(false);
+		InitThreadLoggerBuffer();
 		return false;
 	}
-	assert(LogLevel::TRACE <= level && level <= LogLevel::SYSTEM);
 
 	const LoggerConfig* config = LoggerConfigManager::GetInstance().GetConfig(conf_id);
-	bool valid_level = level >= config->level;
-	int cur_tid = LoggerObjectManager::GetInstance().GetLoggerData(conf_id, kThreadLoggerData, valid_level);
-	if (!valid_level) {
-		kThreadLoggerData->logger_buffer->set_enable(false);
+	bool enable = (LogLevel::TRACE <= level && level <= LogLevel::SYSTEM) && config;
+	if (enable) {
+		enable = level >= config->level;
+	}
+	if (!enable) {
+		InitThreadLoggerBuffer();
 		return false;
 	}
 
+	int cur_tid = LoggerObjectManager::GetInstance().GetLoggerData(conf_id, kThreadLoggerData);
 	kThreadLoggerData->conf_id = conf_id;
 	kThreadLoggerData->tag = tag;
 	kThreadLoggerData->logger_buffer->set_enable(true);
 	kThreadLoggerData->logger_buffer->set_write_index(0);
+
 	if (!config->logger_with_header) {
 		return true;
 	}

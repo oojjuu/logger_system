@@ -21,6 +21,9 @@ static constexpr uint64_t kLoggerFileSize = 104857600;
 // 日志文件数量
 static constexpr uint32_t kLoggerFileNumber = 100;
 
+// 行日志大小, 默认为2048字节
+static constexpr uint64_t kLoggerBufferSize = 2048;
+
 // 行日志大小限制, 默认为1024 * 1024字节
 static constexpr uint64_t kLoggerBufferSizeLimit = 1024 * 1024;
 
@@ -194,10 +197,10 @@ void LoggerConfigManager::AutoGetBoolValue(const std::string& data, uint32_t off
 bool LoggerConfigManager::AutoGetIntValue(const std::string& data, uint32_t offset, uint32_t& max_offset, 
                                         const std::string& key, uint32_t& val, uint32_t min, uint32_t max) 
 {
-    uint64_t val_i = 0;
-    bool res = AutoGetIntValue(data, offset, max_offset, key, val_i, (uint64_t)min, (uint64_t)max);
+    uint64_t int_val = 0;
+    bool res = AutoGetIntValue(data, offset, max_offset, key, int_val, (uint64_t)min, (uint64_t)max);
     if (res) {
-        val = val_i;
+        val = (uint32_t)int_val;
     }
     return res;
 }
@@ -231,43 +234,36 @@ bool LoggerConfigManager::GetKeyValue(const std::string& data, uint32_t offset, 
         return false;
     }
 
-    static size_t kMaxSizeOfConfigValue = 512;
-
     size_t i = (size_t)pos + key.length();
     size_t len = data.length();
+
+    static size_t kMaxSizeOfConfigValue = 512;
     size_t max_i = std::min(i + kMaxSizeOfConfigValue, len);
+
     bool flag = false;
-    char c;
     while (i < max_i) {
-        c = data[i];
-        if (':' == c) {
-            flag = true;
-            break;
-        }
-        if (c == ' ' || c == '\n') {
+        if (' ' == data[i] || '\n' == data[i]) {
             i++;
             continue;
         }
-        else {
-            max_offset = max_offset < i ? i : max_offset;
-            return true;
-        }
+        flag = (':' == data[i]);
+        break;
     }
 
     max_offset = max_offset < i ? i : max_offset;
     if (!flag) {
-        return true;
+        return false;
     }
 
     for (size_t j = i + 1; j < len; j++) {
-        c = data[j];
+        char c = data[j];
         if (c == ' ' || c == '\n') {
             val = data.substr(i+1, j-i-2);
             max_offset = max_offset < j ? j : max_offset;
             return true;
         }
     }
-    return true;
+    return false;
 }
 
 } // namespace logger

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <list>
 #include "LoggerData.h"
 
 namespace agile {

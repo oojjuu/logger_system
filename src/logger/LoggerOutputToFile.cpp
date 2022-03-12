@@ -1,22 +1,8 @@
 #include "LoggerOutputToFile.h"
 
-#include "LoggerUtil.h"
-
-#include <unistd.h>
-#include <fstream>
 #include <iostream>
-#include <sys/types.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <errno.h>
-#ifdef __linux__
-#include <sys/statfs.h>
-#else
-#include <sys/param.h>
-#include <sys/mount.h>
-#endif // __linux__
+
+#include "LoggerUtil.h"
 
 namespace agile {
 namespace logger {
@@ -40,8 +26,8 @@ void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& logger
     file_date_time <<= 6;
     file_date_time |= logger_data->tm_time.tm_mday;
     logger_data->ptr = nullptr;
-    int type_val = GetCreateType(file_date_time);
-    if (type_val > 0) {
+    CreateType type_val = GetCreateType(file_date_time);
+    if (type_val != CreateType::CreateTypeEnd) {
         if (!CreateLoggerFile(file_date_time, type_val)) {
             return;
         }
@@ -49,38 +35,38 @@ void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& logger
     logger_data->ptr = file_handler_list_->tail();
 }
 
-int LoggerOutputToFile::GetCreateType(uint32_t file_date_time) {
+LoggerOutputToFile::CreateType LoggerOutputToFile::GetCreateType(uint32_t file_date_time) {
     if (!file_handler_list_) {
-        return 1;
+        return CreateType::CreateForInit;
     }
 
     FileHandlerNode* tail = file_handler_list_->tail();
     if (tail->file_size >= config_->logger_file_size) {
-        return 2;
+        return CreateType::CreateForFileSize;
     }
 
     if (config_->logger_split_with_date && tail->file_date_time != file_date_time) {
-        return 3;
+        return CreateType::CreateForDate;
     }
-    return -1;
+    return CreateType::CreateTypeEnd;
 }
 
-bool LoggerOutputToFile::IsCreated(uint32_t file_date_time, int create_type) {
+bool LoggerOutputToFile::IsCreated(uint32_t file_date_time, LoggerOutputToFile::CreateType create_type) {
     switch (create_type) {
-        case 1: {
+        case CreateType::CreateForInit: {
                 if (file_handler_list_) {
                     return true;
                 }
             }
             break;
-        case 2: {
+        case CreateType::CreateForFileSize: {
                 FileHandlerNode* tail = file_handler_list_->tail();
                 if (tail && tail->file_size < config_->logger_file_size) {
                     return true;
                 }
             }
             break;
-        case 3: {
+        case CreateType::CreateForDate: {
                 FileHandlerNode* tail = file_handler_list_->tail();
                 if (tail && tail->file_date_time == file_date_time) {
                     return true;
@@ -93,7 +79,7 @@ bool LoggerOutputToFile::IsCreated(uint32_t file_date_time, int create_type) {
     return false;
 }
 
-bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_type) {
+bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, LoggerOutputToFile::CreateType create_type) {
     std::lock_guard<std::mutex> lock(mtx_);
     if (IsCreated(file_date_time, create_type)) {
         return true;
@@ -110,7 +96,7 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t file_date_time, int create_ty
     }
     file_name_map_[cur_log_id_] = file_path;
 
-    static uint32_t kMaxLoggerIdLimit = 1000;//100000000;
+    static uint32_t kMaxLoggerIdLimit = 100000000;
     if (kMaxLoggerIdLimit < cur_log_id_) {
         RenameAllFilesLoggerId();
     }

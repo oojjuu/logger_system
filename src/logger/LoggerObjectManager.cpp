@@ -1,9 +1,8 @@
 #include "LoggerObjectManager.h"
 
-#include <assert.h>
-#include <iostream>
+#include <chrono>
 
-#include "Logger.h"
+// #include "Logger.h"
 #include "LoggerConfigManager.h"
 
 namespace agile {
@@ -69,15 +68,12 @@ LoggerDataVec* LoggerObjectManager::CreateLoggerBuffers() {
 	return &logger_buffers_.back();
 }
 
-int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data, bool valid_level) {
+int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data) {
 	static thread_local LoggerDataVec* kThreadLoggerDataBuffers = nullptr;
 	if (!kThreadLoggerDataBuffers) {
 		kThreadLoggerDataBuffers = CreateLoggerBuffers();
 	}
 	logger_data = (*kThreadLoggerDataBuffers)[conf_id];
-	if (!valid_level) {
-		return 0;
-	}
 	
 	time_t timestamp = time(0);
 	logger_data->tm_time = *localtime(&timestamp);
@@ -85,6 +81,10 @@ int LoggerObjectManager::GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerD
 	++logger_data->tm_time.tm_mon;
 	datas_[conf_id]->PreviousCheck(logger_data);
 
+	return GetThreadId();
+}
+
+int LoggerObjectManager::GetThreadId() {
 	static __thread int kCurThreadId = 0;
 	if (kCurThreadId != 0) {
 		return kCurThreadId;

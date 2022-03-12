@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <thread>
-#include <chrono>
+
 #include "LoggerObject.h"
 
 namespace agile {
@@ -36,10 +36,15 @@ public:
 	 *@brief 获取日志数据
 	 *@param conf_id 日志配置ID
 	 *@param logger_data 日志数据引用
-	 *@param valid_level 是否是有效等级
 	 *@return int 当前线程ID
 	 */
-	int GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data, bool valid_level);
+	int GetLoggerData(uint32_t conf_id, std::shared_ptr<LoggerData>& logger_data);
+
+	/**
+	 *@brief 获取线程ID
+	 *@return int 当前线程ID
+	 */
+	int GetThreadId();
 
 	/**
 	 *@brief 写入日志数据

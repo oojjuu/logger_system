@@ -29,7 +29,7 @@ LIB_STATIC += agile_logger
 LIB_STATIC_FLAG = $(patsubst %,-l%,$(LIB_STATIC))
 
 
-CPPFLAGS += -g -std=c++0x -O3 -Wall -Wno-deprecated $(INCL_PATH_FLAG) $(LIB_PATH_FLAG)
+CPPFLAGS += -g -std=c++17 -O3 -Wall -Wno-deprecated $(INCL_PATH_FLAG) $(LIB_PATH_FLAG)
 
 CC = g++
 

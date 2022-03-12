@@ -1,11 +1,9 @@
 #include "LoggerFileHandler.h"
 
 #include <unistd.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
 #include <iostream>
-#include <sys/stat.h>
 
 namespace agile {
 namespace logger {

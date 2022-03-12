@@ -1,7 +1,7 @@
 #include "LoggerBuffer.h"
 
-#include <cstring>
 #include <iostream>
+
 #include "LoggerConfigManager.h"
 
 namespace agile {

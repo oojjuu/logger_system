@@ -2,13 +2,11 @@
 
 #include <assert.h>
 #include <vector>
+
 #include "LoggerConfig.h"
 
 namespace agile {
 namespace logger {
-
-// 行日志大小, 默认为2048字节
-static constexpr uint64_t kLoggerBufferSize = 2048;
 
 /**
 *@brief 日志配置管理
@@ -35,7 +33,10 @@ public:
     *@return const LoggerConfig*
     */
     const LoggerConfig* GetConfig(uint8_t conf_id) const {
-        assert((size_t)conf_id < configs_.size());
+        // assert((size_t)conf_id < configs_.size());
+        if ((size_t)conf_id >= configs_.size()) {
+            return nullptr;
+        }
         return &configs_[conf_id];
     }
 

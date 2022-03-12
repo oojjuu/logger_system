@@ -17,7 +17,7 @@ static const std::string kDefaultTag;
 *@param file_name_tag 文件名标签，可以使用进程号
 *@return bool 是否成功
 */
-extern bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag="");
+extern bool InitLogger(const std::string& config_file_path, const std::string& file_name_tag = "");
 
 /**
 *@brief 销毁日志模块，可以在程序结束时调用

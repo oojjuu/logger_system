@@ -1,6 +1,5 @@
 #include "LoggerObject.h"
 
-#include <assert.h>
 #include "LoggerConfigManager.h"
 #include "LoggerOutputToConsole.h"
 #include "LoggerOutputToFile.h"
@@ -11,7 +10,6 @@ namespace logger {
 
 LoggerObject::LoggerObject(int conf_id, const std::string& file_name_tag) {
     config_ = LoggerConfigManager::GetInstance().GetConfig(conf_id);
-    sysc_time_val_ = std::chrono::steady_clock::now() + std::chrono::milliseconds(config_->save_interval_msec);
     if (config_->is_output_console) {
         outputs_.emplace_back(std::make_shared<LoggerOutputToConsole>());
     }

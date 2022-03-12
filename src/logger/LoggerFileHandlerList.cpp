@@ -5,10 +5,10 @@ namespace logger {
 
 FileHandlerList::~FileHandlerList() {
     while (head_) {
-        FileHandlerNode* temp = head_;
+        FileHandlerNode* del = head_;
         head_ = head_->next;
-        delete temp;
-        temp = nullptr;
+        delete del;
+        del = nullptr;
     }
 }
 

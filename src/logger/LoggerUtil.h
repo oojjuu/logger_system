@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 #include "LoggerConfig.h"
 
 namespace agile {

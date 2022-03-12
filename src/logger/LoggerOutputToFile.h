@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+
 #include "LoggerOutput.h"
 #include "LoggerConfig.h"
 #include "LoggerFileHandlerList.h"
@@ -53,26 +54,40 @@ private:
     std::string GetLoggerFileName();
 
     /**
-    *@brief 获取创建类型
-    *@return create_type 1:init 2:file size limit 3:date
+    *@brief 日志文件创建类型
     */
-    int GetCreateType(uint32_t file_date_time);
+    enum CreateType {
+        // 初始创建
+        CreateForInit = 0,
+        // 因文件大小而创建
+        CreateForFileSize = 1,
+        // 因时间而创建
+        CreateForDate = 2,
+        // end
+        CreateTypeEnd
+    };
+
+    /**
+    *@brief 获取创建类型
+    *@return create_type 创建类型
+    */
+    CreateType GetCreateType(uint32_t file_date_time);
 
     /**
     *@brief 创建日志文件
     *@param file_date_time 日期时间
-    *@param create_type 1:init 2:file size limit 3:date
+    *@param create_type 创建类型
     *@return bool 是否成功
     */
-    bool CreateLoggerFile(uint32_t file_date_time, int create_type);
+    bool CreateLoggerFile(uint32_t file_date_time, CreateType create_type);
 
     /**
     *@brief 是否已创建日志文件
     *@param file_date_time 日期时间
-    *@param create_type 1:init 2:file size limit 3:date
+    *@param create_type 创建类型
     *@return bool 是否已创建
     */
-    bool IsCreated(uint32_t file_date_time, int create_type);
+    bool IsCreated(uint32_t file_date_time, CreateType create_type);
 
     /**
     *@brief 重命名所有日志logger_id
