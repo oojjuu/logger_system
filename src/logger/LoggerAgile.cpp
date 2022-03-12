@@ -58,52 +58,14 @@ static thread_local std::shared_ptr<LoggerData> kThreadLoggerData = nullptr;
 // logger buffer
 static thread_local std::shared_ptr<LoggerBuffer> kThreadLoggerBuffer = nullptr;
 
-Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-				int line, const std::string& func, LogLevel level) {
-	OnLogger(conf_id, tag, file, line, func, level);
-}
-
-Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-				int line, const std::string& func, LogLevel level, const char* format, ...) {
-	if (OnLogger(conf_id, tag, file, line, func, level)) {
-		std::shared_ptr<LoggerBuffer>& logger_buffer = kThreadLoggerData->logger_buffer; 
-		size_t logger_buffer_size = logger_buffer->config()->logger_buffer_size;
-		logger_buffer->Reserve(logger_buffer_size);
-
-		// format日志内容
-		va_list vlist;
-		va_start(vlist, format);
-		size_t index = vsnprintf(logger_buffer->cur_data(), logger_buffer_size, format, vlist);
-		va_end(vlist);
-
-		logger_buffer->incr_write_index_by(index);
-
-		*logger_buffer << kLoggerFileLineChar;
-		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
-		kThreadLoggerData = nullptr;
-	}
-}
-
-Logger::~Logger() {
-	if (kThreadLoggerData) {
-		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
-		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
-		kThreadLoggerData = nullptr;
-	}
-}
-
-LoggerBuffer& Logger::get() const {
-	return kThreadLoggerData ? *kThreadLoggerData->logger_buffer : *kThreadLoggerBuffer;
-}
-
-void InitThreadLoggerBuffer() {
+static void InitThreadLoggerBuffer() {
 	if (!kThreadLoggerBuffer) {
 		kThreadLoggerBuffer = std::make_shared<LoggerBuffer>();
 		kThreadLoggerBuffer->set_enable(false);
 	}
 }
 
-bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file, 
+static bool OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file, 
 						int line, const std::string& func, LogLevel level) {
 	if (!kIsEnableLogger) {
 		InitThreadLoggerBuffer();
@@ -178,6 +140,44 @@ bool Logger::OnLogger(uint32_t conf_id, const std::string& tag, const std::strin
 	kThreadLoggerData->logger_buffer->set_write_index(index);
 
 	return true;
+}
+
+Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
+				int line, const std::string& func, LogLevel level) {
+	OnLogger(conf_id, tag, file, line, func, level);
+}
+
+Logger::Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
+				int line, const std::string& func, LogLevel level, const char* format, ...) {
+	if (OnLogger(conf_id, tag, file, line, func, level)) {
+		std::shared_ptr<LoggerBuffer>& logger_buffer = kThreadLoggerData->logger_buffer; 
+		size_t logger_buffer_size = logger_buffer->config()->logger_buffer_size;
+		logger_buffer->Reserve(logger_buffer_size);
+
+		// format日志内容
+		va_list vlist;
+		va_start(vlist, format);
+		size_t index = vsnprintf(logger_buffer->cur_data(), logger_buffer_size, format, vlist);
+		va_end(vlist);
+
+		logger_buffer->incr_write_index_by(index);
+
+		*logger_buffer << kLoggerFileLineChar;
+		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
+		kThreadLoggerData = nullptr;
+	}
+}
+
+Logger::~Logger() {
+	if (kThreadLoggerData) {
+		*kThreadLoggerData->logger_buffer << kLoggerFileLineChar;
+		LoggerObjectManager::GetInstance().Write(kThreadLoggerData);
+		kThreadLoggerData = nullptr;
+	}
+}
+
+LoggerBuffer& Logger::get() const {
+	return kThreadLoggerData ? *kThreadLoggerData->logger_buffer : *kThreadLoggerBuffer;
 }
 
 } // namespace logger

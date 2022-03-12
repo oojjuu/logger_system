@@ -48,20 +48,6 @@ public:
     *@return LoggerBuffer
     */
     LoggerBuffer& get() const;
-
-private:
-    /**
-    *@brief  日志输出函数
-    *@param conf_id 配置id
-    *@param tag 标签
-    *@param file 文件名
-    *@param line 行号
-    *@param func 函数名
-    *@param level 日志等级
-    *@return bool
-    */
-    bool OnLogger(uint32_t conf_id, const std::string& tag, const std::string& file,
-                    int line, const std::string& func, LogLevel level);
 };
 
 } // namespace logger
