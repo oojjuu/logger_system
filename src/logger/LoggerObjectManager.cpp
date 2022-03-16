@@ -1,8 +1,8 @@
 #include "LoggerObjectManager.h"
 
 #include <chrono>
+#include <functional>
 
-// #include "Logger.h"
 #include "LoggerConfigManager.h"
 
 namespace agile {

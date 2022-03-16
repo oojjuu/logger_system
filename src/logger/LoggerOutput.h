@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include "LoggerData.h"
 
 namespace agile {

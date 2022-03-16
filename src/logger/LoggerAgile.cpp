@@ -1,6 +1,7 @@
 #include "LoggerAgile.h"
 
 #include <assert.h>
+#include <cstring>
 
 #include "LoggerData.h"
 #include "LoggerObjectManager.h"

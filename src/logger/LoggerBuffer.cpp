@@ -1,6 +1,7 @@
 #include "LoggerBuffer.h"
 
 #include <iostream>
+#include <cstring>
 
 #include "LoggerConfigManager.h"
 

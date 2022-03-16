@@ -2,6 +2,7 @@
 #include "TestCase_Thread.h"
 
 #include <atomic>
+#include <functional>
 
 using namespace agile::logger;
 
