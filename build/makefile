@@ -64,12 +64,12 @@ test_case:
 clean:
 	rm -f *.o
 	rm -f *.a
-	rm -rf ../bin/*
+	rm -rf ../bin/agile_logger_test
 	rm -f ../src/test_case/build/*.o
 	rm -f ../src/test_case/build/agile_logger_test
 
 clean_test:
-	rm -rf ../bin/*
+	rm -rf ../bin/agile_logger_test
 	rm -f ../src/test_case/build/*.o
 	rm -f ../src/test_case/build/agile_logger_test
 

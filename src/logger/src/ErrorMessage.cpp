@@ -1,5 +1,6 @@
 #include "ErrorMessage.h"
 
+#include <string.h>
 #include <cerrno>
 #include <sstream>
 

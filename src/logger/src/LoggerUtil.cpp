@@ -13,6 +13,7 @@
 #include <sys/mount.h>
 #endif // __linux__
 #include <filesystem>
+#include <cstring>
 
 namespace agile {
 namespace logger {
