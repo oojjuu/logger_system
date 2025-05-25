@@ -1,6 +1,6 @@
-#pragma once
+#ifndef AGILE_LOGGER_LOGGER_AGILE_H
+#define AGILE_LOGGER_LOGGER_AGILE_H
 
-#include <stdarg.h>
 #include <string>
 
 #include "LoggerBuffer.h"
@@ -8,47 +8,34 @@
 
 namespace agile {
 namespace logger {
-
+extern void OnLogger(uint32_t confId, const std::string& file, int line, const std::string& func, LogLevel level);
+extern void OnRelease();
+extern LoggerBuffer& OnGet();
 /**
-*@brief 日志对象类
+*@brief Log object class
 */
-class Logger {
+template <uint32_t N>
+class Logger final {
 public:
+    static_assert(N < 30, "N must be less than 30");
     Logger() = delete;
+    Logger(const std::string& file, int line, const std::string& func, LogLevel level) 
+    {
+        OnLogger(N, file, line, func, level);
+    }
 
-    /**
-    *@brief Logger 构造函数
-    *@param conf_id 配置id
-    *@param tag 标签
-    *@param file 文件名
-    *@param line 行号
-    *@param func 函数名
-    *@param level 日志等级
-    */
-    Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-            int line, const std::string& func, LogLevel level);
+    ~Logger() 
+    { 
+        OnRelease();
+    }
 
-    /**
-    *@brief Logger 构造函数
-    *@param conf_id 配置id
-    *@param tag 标签
-    *@param file 文件名
-    *@param line 行号
-    *@param func 函数名
-    *@param level 日志等级
-    *@param format 格式和输出
-    */
-    Logger(uint32_t conf_id, const std::string& tag, const std::string& file, 
-            int line, const std::string& func, LogLevel level, const char* format, ...);
-
-    ~Logger();
-
-    /**
-    *@brief 获取logger buffer
-    *@return LoggerBuffer
-    */
-    LoggerBuffer& get() const;
+    LoggerBuffer& get() const
+    {
+        return OnGet();
+    }
 };
 
 } // namespace logger
 } // namespace agile
+
+#endif // AGILE_LOGGER_LOGGER_AGILE_H

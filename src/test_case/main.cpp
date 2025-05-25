@@ -1,8 +1,5 @@
 #include <iostream>
-#include <vector>
-#include <thread>
-#include <chrono>
-#include <algorithm>
+
 #include "Test.h"
 
 using namespace std;

@@ -1,27 +1,19 @@
-#pragma once
+#ifndef AGILE_LOGGER_LOGGER_LEVEL_H
+#define AGILE_LOGGER_LOGGER_LEVEL_H
 
 namespace agile {
 namespace logger {
-    
 /**
-*@brief 日志等级枚举类
+*@brief logger level emum class
 */
-enum LogLevel {
-    // trace日志
-    TRACE     = 0,
-    // debug日志
-    DEBUG     = 1,
-    // info日志
-    INFO      = 2,
-    // 告警日志
-    WARN      = 3,
-    // 错误日志
-    ERROR     = 4,
-    // fatal日志
-    FATAL     = 5,
-    // 系统错误日志
-    SYSTEM    = 6
+enum class LogLevel : uint32_t {
+    FATAL = 0,
+    ERROR = 1,
+    WARN = 2,
+    INFO = 3,
+    DEBUG = 4,
+    TRACE = 5
 };
-
 } // namespace logger
 } // namespace agile
+#endif // AGILE_LOGGER_LOGGER_LEVEL_H

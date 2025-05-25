@@ -3,7 +3,7 @@
 #include "TestDataObject.h"
 
 /**
-*@brief STL功能测试类
+*@brief STL functional test class
 */
 struct TestCase_STL {
     static void Test();
@@ -29,5 +29,5 @@ void TestCase_STL::Test() {
 
     std::map<std::string, std::vector<std::shared_ptr<TestDataObject>> > map_obj = {{"aa11", {std::make_shared<TestDataObject>(), std::make_shared<TestDataObject>()}},
                                                                                 {"aa22", {std::make_shared<TestDataObject>(), std::make_shared<TestDataObject>()}} };
-    { LOG_SYSTEM << "map_vec_obj:" << map_obj; }
+    { LOG_INFO << "map_vec_obj:" << map_obj; }
 }
