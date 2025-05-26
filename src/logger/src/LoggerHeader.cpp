@@ -76,9 +76,10 @@ void LoggerHeaderImpl::DoHeader(const std::shared_ptr<LoggerData>& data, const s
     static pid_t curPid = getpid();
     index += LoggerUtil::NumToString(*bufferStr, index, static_cast<uint64_t>(curPid));
     (*bufferStr)[index++] = ']';
-
     
     (*bufferStr)[index++] = '[';
+	(*bufferStr)[index++] = '0';
+	(*bufferStr)[index++] = 'x';
     static thread_local uint64_t curTid = GetThreadId();
     index += LoggerUtil::NumToString(*bufferStr, index, curTid);
     (*bufferStr)[index++] = ']';

@@ -8,6 +8,9 @@
 
 namespace agile {
 namespace logger {
+static constexpr uint32_t sleepMilliSec = 200;
+static constexpr uint32_t sleepMilliSecWithWrite = 10;
+
 LoggerObjectManager::~LoggerObjectManager()
 {
 	Destroy();
@@ -57,10 +60,13 @@ void LoggerObjectManager::Destroy()
 {
 	if (running_) {
 		running_ = false;
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepMilliSec));
 		if (thread_->joinable()) {
 			thread_->join();
 		}
+	} else {
+		// Wait for other threads to complete the log writing
+		std::this_thread::sleep_for(std::chrono::milliseconds(sleepMilliSec));
 	}
 	for (size_t i = 0; i < datas_.size(); i++) {
 		static_cast<void>(datas_[i]->Run(std::chrono::steady_clock::now(), true));
@@ -80,8 +86,6 @@ const LoggerConfig* LoggerObjectManager::SetLoggerOutput(uint32_t confId, std::s
 
 void LoggerObjectManager::Run()
 {
-	constexpr uint32_t sleepMilliSec = 200;
-	constexpr uint32_t sleepMilliSecWithWrite = 10;
     while (running_) {
 		bool flag = false;
 		std::chrono::steady_clock::time_point curTime = std::chrono::steady_clock::now();

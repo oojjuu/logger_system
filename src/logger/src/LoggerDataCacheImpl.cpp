@@ -10,7 +10,7 @@ static LoggerHeaderImpl gWithHeader = LoggerHeaderImpl();
 
 CoupleListCache::CoupleListCache(size_t limitedSize) :
     waitingList_{std::make_shared<QuickThreadList<LoggerData>>(limitedSize)},
-    idleList_{std::make_shared<QuickThreadList<LoggerData>>(limitedSize)}
+    idleList_{std::make_shared<QuickThreadList<LoggerData>>()}
 {
 }
 
@@ -31,7 +31,7 @@ bool CoupleListCache::AddWaitingData(const std::shared_ptr<LoggerData> &data)
 
 void CoupleListCache::AddIdleData(const std::shared_ptr<LoggerData> &data)
 {
-    idleList_->PushBackUnlimited(data);
+    idleList_->PushBack(data);
 }
 
 std::shared_ptr<LoggerData> LoggerDataCache::CreateLoggerData(const LoggerConfig &config)

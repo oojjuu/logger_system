@@ -73,14 +73,15 @@ void LoggerOutputToFile::OnLoggerData(const std::shared_ptr<LoggerData>& loggerD
     --node->refs;
 }
 
-void LoggerOutputToFile::Run(const std::chrono::steady_clock::time_point& curTime, bool sync)
+void LoggerOutputToFile::Run(const std::chrono::steady_clock::time_point& curTime, bool finished)
 {
     if (!config_->save_real_time) {
         const bool sysCall = (syscTimeVal_ < curTime);
-        if (sysCall || sync) {
+        if (sysCall || finished) {
             syscTimeVal_ = curTime + std::chrono::milliseconds(config_->save_interval_msec);    
             FileHandlerNode* node = fileHandlerList_->Tail();
             if (!node->isFinished) {
+                node->isFinished = finished;
                 node->fileHandler->Flush();
                 node->fileHandler->Sync();
             }
@@ -89,8 +90,8 @@ void LoggerOutputToFile::Run(const std::chrono::steady_clock::time_point& curTim
         }
     }
 
-    static constexpr uint32_t kCheckFilesInterval = 10000;
-    static constexpr uint32_t kCheckDiskInterval = 60000;
+    static constexpr uint32_t kCheckFilesInterval = 5000;
+    static constexpr uint32_t kCheckDiskInterval = 30000;
     if (checkFileTimeVal_ < curTime) {
         checkFileTimeVal_ = curTime + std::chrono::milliseconds(kCheckFilesInterval);
         CheckFiles(curTime);

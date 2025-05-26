@@ -1,5 +1,6 @@
 #include "LoggerAgile.h"
 
+#include <atomic>
 #include <cstring>
 
 #include "LoggerData.h"
@@ -14,8 +15,10 @@ bool InitLogger(const std::string& configFilePath, const std::string& fileNameTa
 	return LoggerObjectManager::GetInstance().Init(configFilePath, fileNameTag);
 }
 
+static std::atomic<bool> gIsDestroyed{false};
 void DestroyLogger()
-{
+{	
+	gIsDestroyed = true;
 	LoggerObjectManager::GetInstance().Destroy();
 }
 
@@ -24,26 +27,26 @@ const LoggerConfig* SetLoggerOutput(uint32_t confId, std::shared_ptr<LoggerOutpu
 	return LoggerObjectManager::GetInstance().SetLoggerOutput(confId, std::move(output));
 }
 
-struct LoggerHelper
+struct LoggerWrite
 {
-	LoggerHelper()
+	LoggerWrite()
 	{
 		loggerData = std::make_shared<LoggerData>();
 		loggerData->loggerBuffer = std::make_shared<LoggerBuffer>(0, 0);
 	}
-	virtual ~LoggerHelper() = default;
+	virtual ~LoggerWrite() = default;
 	virtual void Write() { }
 	std::shared_ptr<LoggerData> loggerData = nullptr;
 };
 
 static const std::string kLoggerFileLineChar = "\n";
-struct LoggerHelperImpl : public LoggerHelper
+struct LoggerWriteImpl : public LoggerWrite
 {
-	LoggerHelperImpl() : LoggerHelper()
+	LoggerWriteImpl() : LoggerWrite()
 	{
 		loggerData = nullptr;
 	}
-	~LoggerHelperImpl() = default;
+	~LoggerWriteImpl() = default;
 
 	void Write()
 	{
@@ -53,29 +56,38 @@ struct LoggerHelperImpl : public LoggerHelper
 	}
 };
 
-static thread_local LoggerHelper gLoggerHelper;
-static thread_local LoggerHelperImpl gLoggerHelperImpl;
-static thread_local LoggerHelper* helper = &gLoggerHelper;
+static thread_local LoggerWrite gLoggerWrite;
+static thread_local LoggerWriteImpl gLoggerWriteImpl;
+static thread_local LoggerWrite* helper = &gLoggerWrite;
 
-void OnLogger(uint32_t confId, const std::string& file, int line, const std::string& func, LogLevel level)
+static void OnLogger(uint32_t confId, const std::string& file, int line, const std::string& func, LogLevel level)
 {
 	const LoggerConfig* config = LoggerConfigManager::GetInstance().GetConfig(confId);
-	if (level > config->level) {
-		helper = &gLoggerHelper;
+	if (config == nullptr || gIsDestroyed) {
+		helper = &gLoggerWrite;
 		return;
 	}
-	helper = &gLoggerHelperImpl;
+	if (level > config->level) {
+		helper = &gLoggerWrite;
+		return;
+	}
+	helper = &gLoggerWriteImpl;
 	helper->loggerData = LoggerObjectManager::GetInstance().GetLoggerData(confId);
 	helper->loggerData->loggerBuffer->SetWriteIndex(0);
 	helper->loggerData->loggerHeader->DoHeader(helper->loggerData, file, line, func, level);
 }
 
-void OnRelease()
+Logger::Logger(uint32_t confId, const std::string& file, int line, const std::string& func, LogLevel level) 
 {
+	OnLogger(confId, file, line, func, level);
+}
+
+Logger::~Logger() 
+{ 
 	helper->Write();
 }
 
-LoggerBuffer& OnGet()
+LoggerBuffer& Logger::get() const
 {
 	return *(helper->loggerData->loggerBuffer);
 }

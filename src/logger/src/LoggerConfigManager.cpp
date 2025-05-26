@@ -44,11 +44,14 @@ static const std::map<std::string, LogLevel> kLoggerLevelMap = {
 
 LoggerConfigManager::LoggerConfigManager()
 {
-    configs_.emplace_back(MakeDefaultGetConfig());
+    // configs_.emplace_back(MakeDefaultGetConfig());
 }
 
 const LoggerConfig* LoggerConfigManager::GetConfig(uint8_t confId) const
 {
+    if (static_cast<uint32_t>(confId) >= configs_.size()) {
+        return nullptr;
+    }
     return &configs_[confId];
 }
 
@@ -90,15 +93,7 @@ bool LoggerConfigManager::Init(const std::string& configFilePath)
         return false;
     }
     std::string data((std::istreambuf_iterator<char>(fin)), std::istreambuf_iterator<char>());
-    bool ret = ReadFromFileData(data);
-    constexpr size_t maxSizeOfConfig = 30;
-    while (configs_.size() < maxSizeOfConfig) {
-        LoggerConfig config = MakeDefaultGetConfig();
-        config.config_id = static_cast<uint32_t>(configs_.size());
-        config.logger_file_size = 0;
-        configs_.emplace_back(config);
-    }
-    return ret;
+    return ReadFromFileData(data);
 }
 
 bool LoggerConfigManager::ReadFromFileData(const std::string &data)

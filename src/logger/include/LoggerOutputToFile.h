@@ -21,16 +21,16 @@ public:
     virtual ~LoggerOutputToFile();
 
     virtual void PreviousCheck(const std::shared_ptr<LoggerData>& loggerData) override;
-	virtual void Run(const std::chrono::steady_clock::time_point& curTime, bool sync) override;   
+	virtual void Run(const std::chrono::steady_clock::time_point& curTime, bool finished) override;   
     virtual void OnLoggerData(const std::shared_ptr<LoggerData>& loggerData) override;
 
 private:
     /**
-    *@brief 定时检查日志文件大小
+    *@brief Check the size of the log file regularly
     */ 
     void CheckFiles(const std::chrono::steady_clock::time_point& curTime);
     /**
-    *@brief 定时检查磁盘
+    *@brief Check the disk regularly
     */ 
     void CheckDisk();
     /**

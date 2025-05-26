@@ -31,7 +31,7 @@ public:
 
 	void Write(const std::shared_ptr<LoggerData>& loggerData);
 
-	bool Run(const std::chrono::steady_clock::time_point& curTime, bool sync = false);
+	bool Run(const std::chrono::steady_clock::time_point& curTime, bool finished = false);
 
 	std::shared_ptr<LoggerData> GetLoggerData();
 

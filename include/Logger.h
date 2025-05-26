@@ -39,10 +39,10 @@ extern const LoggerConfig* SetLoggerOutput(uint32_t confId, std::shared_ptr<Logg
 #define LogLevel agile::logger::LogLevel
 
 // The following are log macros, which can also be customized
-#define LOG_TRACE AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::TRACE).get()
-#define LOG_DEBUG AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::DEBUG).get()
-#define LOG_INFO AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::INFO).get()
-#define LOG_WARN AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::WARN).get()
-#define LOG_ERROR AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::ERROR).get()
-#define LOG_FATAL AgileLogger<LogConfId>(FILE_LINE_FUNC, LogLevel::FATAL).get()
+#define LOG_TRACE AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::TRACE).get()
+#define LOG_DEBUG AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::DEBUG).get()
+#define LOG_INFO AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::INFO).get()
+#define LOG_WARN AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::WARN).get()
+#define LOG_ERROR AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::ERROR).get()
+#define LOG_FATAL AgileLogger(LogConfId, FILE_LINE_FUNC, LogLevel::FATAL).get()
 #endif // AGILE_LOGGER_LOGGER_H

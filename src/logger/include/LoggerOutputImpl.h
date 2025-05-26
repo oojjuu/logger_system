@@ -14,7 +14,7 @@ public:
 
     virtual void PreviousCheck(const std::shared_ptr<LoggerData>&) { }
 
-	virtual void Run(const std::chrono::steady_clock::time_point&, bool sync = false)
+	virtual void Run(const std::chrono::steady_clock::time_point&, bool finished = false)
     {
         static_cast<void>(sync);
     }

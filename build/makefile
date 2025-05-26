@@ -62,6 +62,7 @@ test_case:
 	cd ../src/test_case/build/ && make
 
 clean:
+	mkdir -p ../bin/
 	rm -f *.o
 	rm -f *.a
 	rm -rf ../bin/agile_logger_test
@@ -69,6 +70,7 @@ clean:
 	rm -f ../src/test_case/build/agile_logger_test
 
 clean_test:
+	mkdir -p ../bin/
 	rm -rf ../bin/agile_logger_test
 	rm -f ../src/test_case/build/*.o
 	rm -f ../src/test_case/build/agile_logger_test

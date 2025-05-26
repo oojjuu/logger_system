@@ -28,9 +28,9 @@ LoggerObject::LoggerObject(int confId, const std::string& nameTag,
     cache_ =  cache;
 }
 
-bool LoggerObject::Run(const std::chrono::steady_clock::time_point& curTime, bool sync)
+bool LoggerObject::Run(const std::chrono::steady_clock::time_point& curTime, bool finished)
 {
-    fileOutput_->Run(curTime, sync);
+    fileOutput_->Run(curTime, finished);
     return cache_->Run(this);
 }
 
