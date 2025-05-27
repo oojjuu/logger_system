@@ -13,35 +13,22 @@ namespace logger {
 template<typename T>
 class MultiThreadList {
 public:
-    MultiThreadList();
-    MultiThreadList(size_t maxSize);
+    MultiThreadList() = default;
+    MultiThreadList(size_t maxSize) : maxSize_{maxSize} { }
     virtual ~MultiThreadList() = default;
 
-    virtual bool PushBack(const std::shared_ptr<T> &val);
-    virtual std::shared_ptr<T> PopBack();
-    virtual void Swap(std::list<std::shared_ptr<T>> &val);
+    bool PushBack(const std::shared_ptr<T> &val);
+    std::shared_ptr<T> PopBack();
+    void Swap(std::list<std::shared_ptr<T>> &val);
 
 protected:
-    ILock *lock_{nullptr};
+    virtual void InitLock() = 0;
+    ILock *lock_ = nullptr; // lock_ value can not be nullptr
 
 private:
-    MutexLock mtx_;
     size_t maxSize_{0};
     std::list<std::shared_ptr<T>> list_;
 };
-
-template<typename T>
-MultiThreadList<T>::MultiThreadList()
-{
-    lock_ = &mtx_;
-}
-
-template<typename T>
-MultiThreadList<T>::MultiThreadList(size_t maxSize)
-{
-    maxSize_ = maxSize;
-    lock_ = &mtx_;
-}
 
 template<typename T>
 bool MultiThreadList<T>::PushBack(const std::shared_ptr<T> &val)
@@ -75,19 +62,44 @@ void MultiThreadList<T>::Swap(std::list<std::shared_ptr<T>> &val)
 }
 
 template<class T>
+class MutexThreadList : public MultiThreadList<T> {
+public:
+    MutexThreadList()
+    {
+        InitLock();
+    }
+    MutexThreadList(size_t maxSize) : MultiThreadList<T>(maxSize)
+    {
+        InitLock();
+    }
+    ~MutexThreadList() = default;
+
+private:
+    void InitLock()
+    {
+        MultiThreadList<T>::lock_ = &mtx_;
+    }
+    MutexLock mtx_;
+};
+
+template<class T>
 class QuickThreadList : public MultiThreadList<T> {
 public:
     QuickThreadList()
     {
-        MultiThreadList<T>::lock_ = &spinLock_;
+        InitLock();
     }
-    QuickThreadList(size_t maxSize) : MultiThreadList<T>(maxSize) 
+    QuickThreadList(size_t maxSize) : MultiThreadList<T>(maxSize)
     {
-        MultiThreadList<T>::lock_ = &spinLock_;
+        InitLock();
     }
     ~QuickThreadList() = default;
 
 private:
+    void InitLock()
+    {
+        MultiThreadList<T>::lock_ = &spinLock_;
+    }
     SpinLock spinLock_;
 };
 } // namespace logger

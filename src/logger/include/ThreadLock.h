@@ -42,11 +42,29 @@ private:
 class LockGuard final {
 public:
     LockGuard() = delete;
+    // lock value can not be nullptr
     LockGuard(ILock *lock);
     ~LockGuard();
-    
+
 private:
     ILock *lock_;
+};
+
+template<typename T>
+class LockGuardRef final {
+public:
+    LockGuardRef() = delete;
+    LockGuardRef(T &lock) : lock_{lock}
+    {
+        lock_.Lock();
+    }
+    ~LockGuardRef()
+    {
+        lock_.UnLock();
+    }
+
+private:
+    T &lock_;
 };
 } // namespace logger
 } // namespace agile
