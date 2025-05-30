@@ -29,20 +29,24 @@ LoggerOutputToFile::~LoggerOutputToFile()
 static FileHandlerNode gEmptyNode(0, 0, "", std::make_shared<EmptyFileHandler>());
 void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& loggerData)
 {
-    FileHandlerNode* tail = fileHandlerList_->Tail();
+    FileHandlerNode* tail = fileHandlerList_->IncrRefTail();
     if (tail->fileSize >= config_->logger_file_size) {
         if (!CreateLoggerFile(0, CreateType::CreateForFileSize)) {
             loggerData->ptr = &gEmptyNode;
             return;
         }
+        --tail->refs;
+        tail = fileHandlerList_->IncrRefTail();
     } else {
         if (config_->logger_split_with_date) {
             uint32_t fileDateTime = GetFileDateTime(loggerData->tm_time);
-            if (tail->fileDateTime != fileDateTime) {
+            if (tail->fileDateTime < fileDateTime) {
                 if (!CreateLoggerFile(fileDateTime, CreateType::CreateForDate)) {
                     loggerData->ptr = &gEmptyNode;
                     return;
                 }
+                --tail->refs;
+                tail = fileHandlerList_->IncrRefTail();
             }
         } else {
             if (!tail->valid && !tail->isFinished) {
@@ -50,11 +54,11 @@ void LoggerOutputToFile::PreviousCheck(const std::shared_ptr<LoggerData>& logger
                     loggerData->ptr = &gEmptyNode;
                     return;
                 }
+                --tail->refs;
+                tail = fileHandlerList_->IncrRefTail();
             }
         }
     }
-    tail = fileHandlerList_->Tail();
-    ++tail->refs;
     loggerData->ptr = tail;
 }
 
@@ -174,7 +178,7 @@ void LoggerOutputToFile::InitHandlerList()
     node->fileSize = LoggerUtil::GetFileSize(node->filePath);
     fileHandlerList_ = std::make_shared<FileHandlerList>();
     fileHandlerList_->EmplaceBack(node);
-    CheckAndDeleteFileNameMap();
+    CheckAndDeleteFileNames();
 }
 
 bool LoggerOutputToFile::CreateLoggerFile(uint32_t fileDateTime, LoggerOutputToFile::CreateType createType)
@@ -208,7 +212,9 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t fileDateTime, LoggerOutputToF
     node->fileSize = LoggerUtil::GetFileSize(node->filePath);
     fileHandlerList_->EmplaceBack(node);
 
-    while (fileHandlerList_->size() > config_->logger_file_number) {
+    constexpr uint32_t maxSizeOfHandlerList = 10U;
+    uint32_t sizeLimited = std::min(config_->logger_file_number, maxSizeOfHandlerList);
+    while (fileHandlerList_->size() > sizeLimited) {
         FileHandlerNode* head = fileHandlerList_->Header();
         bool expired = head->isFinished && (head->refs <= 0);
        // bool sizeLimited = (fileHandlerList_->size() > config_->logger_file_number);
@@ -219,11 +225,11 @@ bool LoggerOutputToFile::CreateLoggerFile(uint32_t fileDateTime, LoggerOutputToF
             break;
         }
     }
-    CheckAndDeleteFileNameMap();
+    CheckAndDeleteFileNames();
     return true;
 }
 
-void LoggerOutputToFile::CheckAndDeleteFileNameMap()
+void LoggerOutputToFile::CheckAndDeleteFileNames()
 {
     while (loggerIds_.size() > config_->logger_file_number) {
         uint32_t id = loggerIds_.front();

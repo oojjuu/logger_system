@@ -46,6 +46,11 @@ public:
     FileHandlerNode* Header() const { return head_; }
 
     FileHandlerNode* Tail() const { return tail_; }
+    FileHandlerNode* IncrRefTail() const
+    {
+        ++tail_->refs;
+        return tail_;
+    }
 
     size_t size() const { return size_; }
 

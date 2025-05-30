@@ -47,7 +47,7 @@ private:
     /**
     *@brief Check and rotate to delete the early log files
     */
-    void CheckAndDeleteFileNameMap();
+    void CheckAndDeleteFileNames();
 
     std::shared_ptr<FileHandler> CreateFileHandler(const std::string &filePath);
 
